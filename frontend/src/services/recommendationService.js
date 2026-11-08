@@ -5,6 +5,13 @@ export const recommendationService = {
     return api.get('/recommendations', params)
   },
 
+  async generateRecommendations(moodId, limit = 20) {
+    return api.post('/recommendations/generate', {
+      mood_id: moodId,
+      limit,
+    })
+  },
+
   async storeRecommendation(trackId, moodId, score) {
     return api.post('/recommendations', {
       track_id: trackId,

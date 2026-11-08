@@ -1,12 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import {
-  Box,
-  Typography,
-  Paper,
-  Chip,
-  MenuItem,
-  TextField,
-  Grid,
+  Alert, Box, Button, Chip, Grid, MenuItem, Paper, TextField, Typography,
 } from '@mui/material'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import recommendationService from '../services/recommendationService'
@@ -14,7 +8,6 @@ import genreMoodService from '../services/genreMoodService'
 import TrackListItem from '../components/music/TrackListItem'
 import LoadingState from '../components/common/LoadingState'
 import EmptyState from '../components/common/EmptyState'
-import ErrorState from '../components/common/ErrorState'
 import { formatScore, formatDateTime } from '../utils/formatters'
 
 export default function RecommendationsPage() {
@@ -22,112 +15,116 @@ export default function RecommendationsPage() {
   const [moods, setMoods] = useState([])
   const [selectedMoodId, setSelectedMoodId] = useState('')
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState('')
+  const [generationInfo, setGenerationInfo] = useState(null)
 
   useEffect(() => {
-    genreMoodService.getMoods().then((res) => {
-      if (res?.moods) setMoods(res.moods)
-    }).catch(() => {})
+    genreMoodService.getMoods()
+      .then((res) => setMoods(res?.moods || []))
+      .catch(() => setError('Could not load moods.'))
   }, [])
 
   const loadRecommendations = useCallback(async () => {
     setLoading(true)
-    setError(null)
+    setError('')
     try {
-      const res = await recommendationService.getUserRecommendations({
+      const result = await recommendationService.getUserRecommendations({
         mood_id: selectedMoodId || undefined,
         limit: 50,
       })
-      setRecommendations(res?.recommendations || [])
+      setRecommendations(result?.recommendations || [])
     } catch (err) {
-      setError(err.message || 'Error loading recommendations.')
+      setError(err.message || 'Could not load recommendations.')
     } finally {
       setLoading(false)
     }
   }, [selectedMoodId])
 
-  useEffect(() => {
-    loadRecommendations()
-  }, [loadRecommendations])
+  useEffect(() => { loadRecommendations() }, [loadRecommendations])
 
-  if (loading) {
-    return <LoadingState message="Fetching stored recommendation records…" />
+  const generate = async () => {
+    if (!selectedMoodId) return
+    setGenerating(true)
+    setError('')
+    setGenerationInfo(null)
+    try {
+      const result = await recommendationService.generateRecommendations(
+        Number(selectedMoodId), 20,
+      )
+      setRecommendations(result?.recommendations || [])
+      setGenerationInfo(result)
+    } catch (err) {
+      setError(err.message || 'Could not generate recommendations.')
+    } finally {
+      setGenerating(false)
+    }
   }
 
-  if (error && recommendations.length === 0) {
-    return (
-      <ErrorState
-        title="Recommendations Unavailable"
-        message={error}
-        onRetry={loadRecommendations}
-      />
-    )
-  }
+  if (loading) return <LoadingState message="Loading recommendations…" />
 
   return (
     <Box>
-      {/* Header Banner */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 3, md: 4 },
-          mb: 4,
-          borderRadius: 4,
-          background: 'linear-gradient(135deg, #fdf4ff 0%, #fae8ff 50%, #f5d0fe 100%)',
-          border: '1px solid #f0abfc',
-        }}
-      >
+      <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 3, border: '1px solid #e2e8f0' }}>
         <Chip
-          icon={<AutoAwesomeIcon sx={{ fontSize: 16 }} />}
+          icon={<AutoAwesomeIcon />}
+          label="VALENCE + ENERGY + BLOOM FILTER"
+          color="secondary"
           size="small"
-          label="DATABASE RECOMMENDATIONS (TERNARY RELATIONSHIP)"
-          sx={{
-            fontWeight: 700,
-            fontSize: '0.75rem',
-            backgroundColor: '#c026d3',
-            color: '#ffffff',
-            mb: 1.5,
-          }}
+          sx={{ mb: 1.5 }}
         />
-        <Typography variant="h4" fontWeight={800} color="#0f172a" gutterBottom>
+        <Typography variant="h4" fontWeight={800} gutterBottom>
           Recommended for You
         </Typography>
-        <Typography variant="body2" color="#701a75" sx={{ maxWidth: 640 }}>
-          View stored recommendation records associated with your profile and emotional states,
-          mapped from the ternary relationship <code>APP_USER × TRACK × MOOD</code> with millisecond timestamp precision.
+        <Typography color="text.secondary" variant="body2">
+          Choose a mood to generate a ranked list. Previously heard tracks are screened
+          using a Bloom Filter; remaining tracks are scored by valence and energy similarity.
         </Typography>
       </Paper>
 
-      {/* Mood Filter Bar */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6" fontWeight={700}>
-          Stored Recommendation Records ({recommendations.length})
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center', mb: 3 }}>
+        <Typography variant="h6" fontWeight={700} sx={{ flexGrow: 1 }}>
+          Recommendations ({recommendations.length})
         </Typography>
-        <Box sx={{ width: 220 }}>
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Filter by Mood"
-            value={selectedMoodId}
-            onChange={(e) => setSelectedMoodId(e.target.value)}
-          >
-            <MenuItem value="">All Moods</MenuItem>
-            {moods.map((m) => (
-              <MenuItem key={m.mood_id} value={m.mood_id}>
-                {m.name}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Box>
+        <TextField
+          select
+          size="small"
+          label="Choose Mood"
+          value={selectedMoodId}
+          onChange={(event) => setSelectedMoodId(event.target.value)}
+          sx={{ width: 220 }}
+        >
+          <MenuItem value="">Select a mood</MenuItem>
+          {moods.map((mood) => (
+            <MenuItem key={mood.mood_id} value={mood.mood_id}>{mood.name}</MenuItem>
+          ))}
+        </TextField>
+        <Button
+          variant="contained"
+          startIcon={<AutoAwesomeIcon />}
+          disabled={!selectedMoodId || generating}
+          onClick={generate}
+        >
+          {generating ? 'Generating…' : 'Generate for Mood'}
+        </Button>
       </Box>
 
-      {/* Recommendations List */}
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {generationInfo && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          Generated {generationInfo.count} recommendations. Bloom Filter screened
+          {` ${generationInfo.excluded_previously_heard} `}previously heard track IDs
+          {` (estimated false-positive rate: ${
+            (generationInfo.bloom_filter?.estimated_false_positive_rate * 100 || 0).toFixed(2)
+          }%).`}
+        </Alert>
+      )}
+
       {recommendations.length === 0 ? (
         <EmptyState
           icon={AutoAwesomeIcon}
           title="No Recommendations Found"
-          description="There are currently no pre-stored recommendation records for your account. Log more mood sessions and listen to tracks to populate recommendations."
+          description="Choose a mood and generate recommendations. Tracks without valence or energy metadata are skipped."
         />
       ) : (
         <Grid container spacing={2}>
@@ -136,15 +133,9 @@ export default function RecommendationsPage() {
               <Paper
                 elevation={0}
                 sx={{
-                  p: 2,
-                  borderRadius: 3,
-                  border: '1px solid #e2e8f0',
-                  backgroundColor: '#ffffff',
-                  display: 'flex',
-                  flexDirection: { xs: 'column', md: 'row' },
-                  alignItems: { md: 'center' },
-                  justifyContent: 'space-between',
-                  gap: 2,
+                  p: 2, borderRadius: 3, border: '1px solid #e2e8f0',
+                  display: 'flex', flexDirection: { xs: 'column', md: 'row' },
+                  alignItems: { md: 'center' }, justifyContent: 'space-between', gap: 2,
                 }}
               >
                 <Box sx={{ flexGrow: 1 }}>
@@ -160,44 +151,27 @@ export default function RecommendationsPage() {
                       energy: rec.energy,
                       audio_url: rec.audio_url,
                     }}
-                    playlistContext={recommendations.map((r) => ({
-                      track_id: r.track_id,
-                      title: r.track_title,
-                      artist_name: r.artist_name,
-                      album_title: r.album_title,
-                      cover_image_url: r.cover_image_url,
-                      duration_sec: r.duration_sec,
-                      valence: r.valence,
-                      energy: r.energy,
-                      audio_url: r.audio_url,
+                    playlistContext={recommendations.map((item) => ({
+                      track_id: item.track_id,
+                      title: item.track_title,
+                      artist_name: item.artist_name,
+                      album_title: item.album_title,
+                      cover_image_url: item.cover_image_url,
+                      duration_sec: item.duration_sec,
+                      valence: item.valence,
+                      energy: item.energy,
+                      audio_url: item.audio_url,
                     }))}
                   />
                 </Box>
-
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    px: { xs: 0, md: 2 },
-                    borderLeft: { md: '1px solid #f1f5f9' },
-                    minWidth: { md: 200 },
-                    justifyContent: { xs: 'space-between', md: 'flex-start' },
-                  }}
-                >
-                  <Box>
-                    <Chip
-                      size="small"
-                      label={rec.mood_name}
-                      sx={{ backgroundColor: '#fdf4ff', color: '#c026d3', fontWeight: 600, mb: 0.5 }}
-                    />
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Score: <strong>{formatScore(rec.score)}</strong>
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
-                      Generated {formatDateTime(rec.generated_at)}
-                    </Typography>
-                  </Box>
+                <Box sx={{ minWidth: { md: 190 } }}>
+                  <Chip size="small" label={rec.mood_name} color="secondary" sx={{ mb: 0.5 }} />
+                  <Typography variant="caption" display="block" color="text.secondary">
+                    Score: <strong>{formatScore(rec.score)}</strong>
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Generated {formatDateTime(rec.generated_at)}
+                  </Typography>
                 </Box>
               </Paper>
             </Grid>
