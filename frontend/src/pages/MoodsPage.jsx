@@ -51,6 +51,21 @@ export default function MoodsPage() {
   const [logSuccessMsg, setLogSuccessMsg] = useState(null)
   const [logErrorMsg, setLogErrorMsg] = useState(null)
 
+  const handleSelectMood = useCallback(async (mood) => {
+    setSelectedMood(mood)
+    setSearchParams({ selected: mood.mood_id })
+    setTracksLoading(true)
+    try {
+      const res = await genreMoodService.getTracksByMood(mood.mood_id)
+      setMoodTracks(res?.tracks || [])
+    } catch (err) {
+      console.warn('Error loading mood tracks:', err.message)
+      setMoodTracks([])
+    } finally {
+      setTracksLoading(false)
+    }
+  }, [setSearchParams])
+
   const loadMoodsData = useCallback(async () => {
     setLoading(true)
     setError(null)
@@ -82,26 +97,11 @@ export default function MoodsPage() {
     } finally {
       setLoading(false)
     }
-  }, [initialSelected])
+  }, [initialSelected, handleSelectMood])
 
   useEffect(() => {
     loadMoodsData()
   }, [loadMoodsData])
-
-  const handleSelectMood = async (mood) => {
-    setSelectedMood(mood)
-    setSearchParams({ selected: mood.mood_id })
-    setTracksLoading(true)
-    try {
-      const res = await genreMoodService.getTracksByMood(mood.mood_id)
-      setMoodTracks(res?.tracks || [])
-    } catch (err) {
-      console.warn('Error loading mood tracks:', err.message)
-      setMoodTracks([])
-    } finally {
-      setTracksLoading(false)
-    }
-  }
 
   const handleOpenLogDialog = () => {
     setLogMoodId(selectedMood?.mood_id || (moods[0]?.mood_id || 1))

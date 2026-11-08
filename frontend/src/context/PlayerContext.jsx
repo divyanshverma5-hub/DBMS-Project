@@ -15,6 +15,11 @@ export function PlayerProvider({ children }) {
   const [queueIndex, setQueueIndex] = useState(-1)
   const [playbackError, setPlaybackError] = useState(null)
 
+  // Mutable refs to prevent stale closures and guarantee latest state in event listeners
+  const queueRef = useRef([])
+  const queueIndexRef = useRef(-1)
+  const nextTrackRef = useRef(null)
+
   // Track listening metrics
   const sessionListenedRef = useRef(0)
   const lastTimeRef = useRef(0)
@@ -35,21 +40,38 @@ export function PlayerProvider({ children }) {
     }
   }, [])
 
-  // Setup audio event listeners
+  // Sync volume to audio element independently of event listeners
   useEffect(() => {
     const audio = audioRef.current
-    audio.volume = volume
+    if (audio) {
+      audio.volume = isMuted ? 0 : volume
+    }
+  }, [volume, isMuted])
+
+  // Setup core audio element event listeners (attached once on mount)
+  useEffect(() => {
+    const audio = audioRef.current
 
     const handleTimeUpdate = () => {
       setCurrentTime(audio.currentTime)
-      if (!audio.paused && audio.currentTime > lastTimeRef.current) {
+      // Accumulate real played seconds only when active and not seeking
+      if (!audio.paused && !audio.seeking && audio.currentTime > lastTimeRef.current) {
         const delta = audio.currentTime - lastTimeRef.current
-        // Guard against massive jump from seek
-        if (delta > 0 && delta < 2) {
+        // Normal progression delta is around 0.25s; guard against any forward seek jump
+        if (delta > 0 && delta <= 1.0) {
           sessionListenedRef.current += delta
         }
       }
       lastTimeRef.current = audio.currentTime
+    }
+
+    const handleSeeking = () => {
+      lastTimeRef.current = audio.currentTime
+    }
+
+    const handleSeeked = () => {
+      lastTimeRef.current = audio.currentTime
+      setCurrentTime(audio.currentTime)
     }
 
     const handleLoadedMetadata = () => {
@@ -70,8 +92,10 @@ export function PlayerProvider({ children }) {
       setIsPlaying(false)
       flushListeningRecord(activeTrackRef.current, sessionListenedRef.current)
       sessionListenedRef.current = 0
-      // Auto play next in queue if available
-      nextTrack()
+      // Always invoke latest nextTrack callback to ensure automatic queue progression
+      if (nextTrackRef.current) {
+        nextTrackRef.current()
+      }
     }
 
     const handleError = () => {
@@ -80,6 +104,8 @@ export function PlayerProvider({ children }) {
     }
 
     audio.addEventListener('timeupdate', handleTimeUpdate)
+    audio.addEventListener('seeking', handleSeeking)
+    audio.addEventListener('seeked', handleSeeked)
     audio.addEventListener('loadedmetadata', handleLoadedMetadata)
     audio.addEventListener('play', handlePlay)
     audio.addEventListener('pause', handlePause)
@@ -88,22 +114,27 @@ export function PlayerProvider({ children }) {
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate)
+      audio.removeEventListener('seeking', handleSeeking)
+      audio.removeEventListener('seeked', handleSeeked)
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
       audio.removeEventListener('play', handlePlay)
       audio.removeEventListener('pause', handlePause)
       audio.removeEventListener('ended', handleEnded)
       audio.removeEventListener('error', handleError)
     }
-  }, [flushListeningRecord, volume])
+  }, [flushListeningRecord])
 
   const playTrack = useCallback((track, newQueue = null) => {
     if (!track) return
 
-    // If new queue provided, replace queue
+    // If new queue provided, replace queue and sync refs
     if (newQueue && Array.isArray(newQueue)) {
       setQueue(newQueue)
+      queueRef.current = newQueue
       const idx = newQueue.findIndex((t) => t.track_id === track.track_id)
-      setQueueIndex(idx !== -1 ? idx : 0)
+      const validIdx = idx !== -1 ? idx : 0
+      setQueueIndex(validIdx)
+      queueIndexRef.current = validIdx
     }
 
     // Flush previous track's listening record
@@ -162,42 +193,44 @@ export function PlayerProvider({ children }) {
   const setVolume = useCallback((newVolume) => {
     const clamped = Math.max(0, Math.min(1, newVolume))
     setVolumeState(clamped)
-    if (audioRef.current) {
-      audioRef.current.volume = clamped
-    }
     if (clamped > 0 && isMuted) {
       setIsMuted(false)
     }
   }, [isMuted])
 
   const toggleMute = useCallback(() => {
-    if (isMuted) {
-      setIsMuted(false)
-      if (audioRef.current) audioRef.current.volume = volume || 0.8
-    } else {
-      setIsMuted(true)
-      if (audioRef.current) audioRef.current.volume = 0
-    }
-  }, [isMuted, volume])
+    setIsMuted((prev) => !prev)
+  }, [])
 
   const nextTrack = useCallback(() => {
-    if (queue.length === 0) return
-    const nextIdx = (queueIndex + 1) % queue.length
+    const q = queueRef.current
+    const idx = queueIndexRef.current
+    if (q.length === 0) return
+    const nextIdx = (idx + 1) % q.length
     setQueueIndex(nextIdx)
-    playTrack(queue[nextIdx])
-  }, [queue, queueIndex, playTrack])
+    queueIndexRef.current = nextIdx
+    playTrack(q[nextIdx])
+  }, [playTrack])
+
+  // Always keep nextTrackRef current so audio ended listener triggers the latest queue state
+  useEffect(() => {
+    nextTrackRef.current = nextTrack
+  }, [nextTrack])
 
   const prevTrack = useCallback(() => {
-    if (queue.length === 0) return
+    const q = queueRef.current
+    const idx = queueIndexRef.current
+    if (q.length === 0) return
     // If more than 3 seconds in, restart track
     if (audioRef.current && audioRef.current.currentTime > 3) {
       seek(0)
       return
     }
-    const prevIdx = (queueIndex - 1 + queue.length) % queue.length
+    const prevIdx = (idx - 1 + q.length) % q.length
     setQueueIndex(prevIdx)
-    playTrack(queue[prevIdx])
-  }, [queue, queueIndex, playTrack, seek])
+    queueIndexRef.current = prevIdx
+    playTrack(q[prevIdx])
+  }, [playTrack, seek])
 
   const value = {
     currentTrack,
