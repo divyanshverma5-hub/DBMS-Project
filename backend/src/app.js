@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 
-// Routers
 const healthRouter = require('./routes/health');
 const authRouter = require('./routes/auth');
 const usersRouter = require('./routes/users');
@@ -17,15 +16,13 @@ const recommendationsRouter = require('./routes/recommendations');
 
 const app = express();
 
-// ── Global Middleware ────────────────────────────────────────────────────────
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-// ── Mount API Routes ─────────────────────────────────────────────────────────
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
@@ -39,7 +36,6 @@ app.use('/api/ratings', ratingsRouter);
 app.use('/api/playlists', playlistsRouter);
 app.use('/api/recommendations', recommendationsRouter);
 
-// ── 404 Handler ──────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -47,48 +43,45 @@ app.use((req, res) => {
   });
 });
 
-// ── Global Centralized Error Handler ─────────────────────────────────────────
 app.use((err, req, res, next) => {
-  // SQL/Database exception handling
   if (err.sqlState || err.errno) {
-    console.error(`[DB ERROR ${err.errno || ''} - SQLSTATE ${err.sqlState || ''}]:`, err.message);
+    console.error(`[DB ERROR ${err.errno || ''} - SQLSTATE ${err.sqlState || ''}]`, err.message);
 
-    // ER_DUP_ENTRY
     if (err.errno === 1062) {
       return res.status(409).json({
         success: false,
-        message: 'A duplicate record already exists in the database.',
-        detail: err.message,
+        message: 'A record with the same unique value already exists.',
       });
     }
 
-    // Custom Stored Procedure / Trigger Signal (SQLSTATE 45000)
     if (err.sqlState === '45000') {
       return res.status(400).json({
         success: false,
-        message: err.message,
+        message: 'The request violates a database business rule.',
       });
     }
 
-    // Foreign Key Violation (ER_ROW_IS_REFERENCED / ER_NO_REFERENCED_ROW)
     if (err.errno === 1451 || err.errno === 1452) {
       return res.status(400).json({
         success: false,
-        message: 'Referential integrity violation: referenced record does not exist or has active dependents.',
+        message: 'Referential integrity violation: check the referenced records.',
       });
     }
   } else {
-    console.error('[UNHANDLED SERVER ERROR]:', err);
+    console.error('[UNHANDLED SERVER ERROR]', err);
   }
 
-  const statusCode = err.status || 500;
+  const statusCode = Number.isInteger(err.status) && err.status >= 400 && err.status < 600
+    ? err.status
+    : 500;
   const response = {
     success: false,
-    message: err.message || 'Internal server error occurred.',
+    message: statusCode >= 500
+      ? 'An unexpected server error occurred.'
+      : (err.publicMessage || err.message || 'The request could not be completed.'),
   };
 
-  // Stack trace only in local development
-  if (process.env.NODE_ENV === 'development' && !err.sqlState) {
+  if (process.env.NODE_ENV === 'development' && statusCode >= 500 && !err.sqlState) {
     response.stack = err.stack;
   }
 
