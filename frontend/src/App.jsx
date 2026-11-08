@@ -1,42 +1,109 @@
-import { useEffect, useState } from 'react'
-import './App.css'
+import React from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { ThemeProvider } from '@mui/material/styles'
+import CssBaseline from '@mui/material/CssBaseline'
+import theme from './theme'
+import { AuthProvider } from './context/AuthContext'
+import { PlayerProvider } from './context/PlayerContext'
+import MainLayout from './layouts/MainLayout'
+import ProtectedRoute from './components/common/ProtectedRoute'
 
-function App() {
-  const [health, setHealth] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+// Pages
+import HomePage from './pages/HomePage'
+import ExplorePage from './pages/ExplorePage'
+import MoodsPage from './pages/MoodsPage'
+import ArtistsPage from './pages/ArtistsPage'
+import ArtistDetailPage from './pages/ArtistDetailPage'
+import AlbumsPage from './pages/AlbumsPage'
+import AlbumDetailPage from './pages/AlbumDetailPage'
+import PlaylistsPage from './pages/PlaylistsPage'
+import PlaylistDetailPage from './pages/PlaylistDetailPage'
+import HistoryPage from './pages/HistoryPage'
+import RatingsPage from './pages/RatingsPage'
+import RecommendationsPage from './pages/RecommendationsPage'
+import ProfilePage from './pages/ProfilePage'
+import UserProfilePage from './pages/UserProfilePage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
 
-  useEffect(() => {
-    fetch('http://localhost:5000/api/health')
-      .then(r => r.json())
-      .then(data => { setHealth(data); setLoading(false) })
-      .catch(err => { setError(err.message); setLoading(false) })
-  }, [])
-
+export default function App() {
   return (
-    <div style={{ fontFamily: 'sans-serif', maxWidth: 600, margin: '60px auto', padding: '0 20px' }}>
-      <h1 style={{ color: '#6c47ff' }}>🎵 Music Mood Recommendation</h1>
-      <p style={{ color: '#555' }}>Phase 1 — Project Foundation</p>
-      <hr />
-      <h2>API Health Check</h2>
-      {loading && <p>Checking backend connection…</p>}
-      {error && <p style={{ color: 'red' }}>❌ Could not reach backend: {error}</p>}
-      {health && (
-        <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-          <tbody>
-            {Object.entries(health).map(([k, v]) => (
-              <tr key={k}>
-                <td style={{ padding: '6px 12px', fontWeight: 600, border: '1px solid #eee' }}>{k}</td>
-                <td style={{ padding: '6px 12px', border: '1px solid #eee', color: v === 'connected' ? 'green' : v === 'disconnected' ? 'red' : '#333' }}>
-                  {String(v)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <AuthProvider>
+        <PlayerProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Main Application Shell */}
+              <Route path="/" element={<MainLayout />}>
+                <Route index element={<HomePage />} />
+                <Route path="explore" element={<ExplorePage />} />
+                <Route path="moods" element={<MoodsPage />} />
+                <Route path="artists" element={<ArtistsPage />} />
+                <Route path="artists/:id" element={<ArtistDetailPage />} />
+                <Route path="albums" element={<AlbumsPage />} />
+                <Route path="albums/:id" element={<AlbumDetailPage />} />
+                <Route path="users/:id" element={<UserProfilePage />} />
+                <Route path="login" element={<LoginPage />} />
+                <Route path="register" element={<RegisterPage />} />
+
+                {/* Protected Routes */}
+                <Route
+                  path="playlists"
+                  element={
+                    <ProtectedRoute>
+                      <PlaylistsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="playlists/:playlistNo"
+                  element={
+                    <ProtectedRoute>
+                      <PlaylistDetailPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="history"
+                  element={
+                    <ProtectedRoute>
+                      <HistoryPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="ratings"
+                  element={
+                    <ProtectedRoute>
+                      <RatingsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="recommendations"
+                  element={
+                    <ProtectedRoute>
+                      <RecommendationsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="profile"
+                  element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Fallback */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </PlayerProvider>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
-
-export default App
