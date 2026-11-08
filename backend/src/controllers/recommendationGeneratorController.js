@@ -42,8 +42,12 @@ async function generateRecommendations(req, res, next) {
               COALESCE(tm.confidence, 0) AS mood_confidence
        FROM track t
        INNER JOIN album al ON al.album_id = t.album_id
-       LEFT JOIN track_artist ta
-         ON ta.track_id = t.track_id AND ta.role = 'main'
+       LEFT JOIN (
+         SELECT track_id, MIN(artist_id) AS artist_id
+         FROM track_artist
+         WHERE role = 'main'
+         GROUP BY track_id
+       ) ta ON ta.track_id = t.track_id
        LEFT JOIN artist ar ON ar.artist_id = ta.artist_id
        LEFT JOIN track_mood tm
          ON tm.track_id = t.track_id AND tm.mood_id = ?
@@ -90,8 +94,12 @@ async function generateRecommendations(req, res, next) {
        JOIN mood m ON m.mood_id = r.mood_id
        JOIN track t ON t.track_id = r.track_id
        JOIN album al ON al.album_id = t.album_id
-       LEFT JOIN track_artist ta
-         ON ta.track_id = t.track_id AND ta.role = 'main'
+       LEFT JOIN (
+         SELECT track_id, MIN(artist_id) AS artist_id
+         FROM track_artist
+         WHERE role = 'main'
+         GROUP BY track_id
+       ) ta ON ta.track_id = t.track_id
        LEFT JOIN artist ar ON ar.artist_id = ta.artist_id
        WHERE r.user_id = ? AND r.mood_id = ?
          AND r.generated_at = ? AND r.track_id IN (${idMarks})
