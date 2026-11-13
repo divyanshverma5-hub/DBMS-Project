@@ -104,22 +104,12 @@ const createPlaylistRules = [
 ];
 
 const addTrackToPlaylistRules = [
-  param('playlist_no')
+  param('playlistNo')
     .isInt({ min: 1 })
     .withMessage('Playlist number must be a positive integer'),
   body('track_id')
     .isInt({ min: 1 })
     .withMessage('Track ID must be a positive integer'),
-];
-
-// Rating validation
-const rateTrackRules = [
-  body('track_id')
-    .isInt({ min: 1 })
-    .withMessage('Track ID must be a positive integer'),
-  body('rating')
-    .isInt({ min: 1, max: 5 })
-    .withMessage('Rating must be an integer between 1 and 5'),
 ];
 
 // Mood Log validation
@@ -149,7 +139,6 @@ module.exports = {
   changePasswordRules,
   createPlaylistRules,
   addTrackToPlaylistRules,
-  rateTrackRules,
   logMoodRules,
   recordListenRules,
 };
