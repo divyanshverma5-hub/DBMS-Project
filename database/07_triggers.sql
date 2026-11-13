@@ -9,7 +9,6 @@ USE music_mood_db;
 
 DROP TRIGGER IF EXISTS trg_free_user_disjoint_check;
 DROP TRIGGER IF EXISTS trg_premium_user_disjoint_check;
-DROP TRIGGER IF EXISTS trg_recommendation_score_validate;
 DROP TRIGGER IF EXISTS trg_playlist_track_position_validate;
 
 DELIMITER $$
@@ -53,24 +52,6 @@ BEGIN
     IF v_exists > 0 THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Disjoint ISA violation: user is already registered as a free user';
-    END IF;
-END$$
-
--- ----------------------------------------------------------------------------
--- Trigger 3: trg_recommendation_score_validate
--- Verifies score range and defaults timestamp precision if not provided.
--- ----------------------------------------------------------------------------
-CREATE TRIGGER trg_recommendation_score_validate
-BEFORE INSERT ON recommendation
-FOR EACH ROW
-BEGIN
-    IF NEW.score < 0.0 OR NEW.score > 1.0 THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Validation error: recommendation score must be between 0.0 and 1.0';
-    END IF;
-    
-    IF NEW.generated_at IS NULL THEN
-        SET NEW.generated_at = NOW(3);
     END IF;
 END$$
 

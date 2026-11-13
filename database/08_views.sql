@@ -13,7 +13,7 @@ DROP VIEW IF EXISTS v_mood_catalogue_overview;
 
 -- ----------------------------------------------------------------------------
 -- View 1: v_track_popularity
--- Combines track details, artist, album, total stream count, and average user rating.
+-- Combines track details, artist, album, and total stream count.
 -- Demonstrates LEFT JOINs, aggregate functions (COUNT, AVG), and GROUP BY.
 -- ----------------------------------------------------------------------------
 CREATE VIEW v_track_popularity AS
@@ -27,14 +27,11 @@ SELECT
     al.title AS album_title,
     ar.name  AS primary_artist,
     COUNT(DISTINCT lh.listen_id) AS total_plays,
-    ROUND(COALESCE(AVG(r.rating), 0), 2) AS avg_rating,
-    COUNT(DISTINCT r.user_id) AS total_ratings
 FROM track t
 INNER JOIN album al ON t.album_id = al.album_id
 LEFT JOIN track_artist ta ON t.track_id = ta.track_id AND ta.role = 'main'
 LEFT JOIN artist ar ON ta.artist_id = ar.artist_id
 LEFT JOIN listening_history lh ON t.track_id = lh.track_id
-LEFT JOIN rating r ON t.track_id = r.track_id
 GROUP BY t.track_id, t.title, t.duration_sec, t.valence, t.energy, t.tempo_bpm, al.title, ar.name;
 
 -- ----------------------------------------------------------------------------

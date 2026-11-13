@@ -4,8 +4,8 @@
 --
 -- IMPORTANT DATA EFFECT:
 -- This replaces the entire music catalogue. Deleting tracks cascades to their
--- listening_history, ratings, playlist_track rows, recommendations, and
--- track_artist / track_genre / track_mood rows. User accounts, user follows,
+-- listening_history, playlist_track rows, and track_artist / track_genre /
+-- track_mood rows. User accounts, user follows,
 -- mood logs, playlist records, and the mood taxonomy are preserved.
 --
 -- YouTube IDs are populated only where a candidate ID was already available.

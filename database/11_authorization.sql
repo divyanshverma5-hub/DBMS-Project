@@ -26,7 +26,7 @@ DROP USER IF EXISTS 'music_admin_user'@'localhost';
 -- Role A: Backend Application Service (`role_music_app_backend`)
 -- Principle of Least Privilege:
 -- - Read access on tables and views.
--- - Direct INSERT/UPDATE/DELETE only on everyday operational activity tables (logs, ratings, listening history).
+-- - Direct INSERT/UPDATE/DELETE only on everyday operational activity tables (mood logs, listening history).
 -- - Sensitive multi-table structural changes (user registration, track creation, playlist sequencing, artist/genre removal)
 --   MUST be executed via stored procedures to prevent bypassing critical integrity constraints!
 -- - NEVER granted DDL privileges (CREATE, ALTER, DROP).
@@ -51,9 +51,7 @@ GRANT SELECT ON music_mood_db.* TO 'role_music_app_backend';
 -- (2) DML write access ONLY on direct operational user-activity tables:
 GRANT INSERT, UPDATE, DELETE ON music_mood_db.listening_history TO 'role_music_app_backend';
 GRANT INSERT, UPDATE, DELETE ON music_mood_db.user_mood_log TO 'role_music_app_backend';
-GRANT INSERT, UPDATE, DELETE ON music_mood_db.rating TO 'role_music_app_backend';
 GRANT INSERT, UPDATE, DELETE ON music_mood_db.user_follow TO 'role_music_app_backend';
-GRANT INSERT, UPDATE, DELETE ON music_mood_db.recommendation TO 'role_music_app_backend';
 GRANT INSERT, UPDATE, DELETE ON music_mood_db.playlist_track TO 'role_music_app_backend';
 
 -- (3) EXECUTE on stored procedures & functions:

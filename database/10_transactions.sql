@@ -59,36 +59,8 @@ FROM app_user
 WHERE username = 'orphan_candidate';
 
 -- ============================================================================
--- DEMO 3: RE-RATING UPSERT TRANSACTION (Q2 Architectural Decision)
--- Demonstrates ON DUPLICATE KEY UPDATE preserving composite PK (user_id, track_id).
--- ============================================================================
-START TRANSACTION;
-
--- Initial rating by User 1 on Track 50
-INSERT INTO rating (user_id, track_id, rating, rated_at)
-VALUES (1, 50, 3, NOW())
-ON DUPLICATE KEY UPDATE 
-    rating = VALUES(rating),
-    rated_at = VALUES(rated_at);
-
--- User revises their rating from 3 to 5 stars
-INSERT INTO rating (user_id, track_id, rating, rated_at)
-VALUES (1, 50, 5, NOW())
-ON DUPLICATE KEY UPDATE 
-    rating = VALUES(rating),
-    rated_at = VALUES(rated_at);
-
--- Verify only one row exists with updated 5-star rating
-SELECT * FROM rating WHERE user_id = 1 AND track_id = 50;
-
--- Clean up test rating
-DELETE FROM rating WHERE user_id = 1 AND track_id = 50;
-
-COMMIT;
-
--- ============================================================================
--- DEMO 4: REFERENTIAL INTEGRITY – ON DELETE CASCADE
--- Demonstrates that deleting an app_user cascades to playlists, ratings, and logs.
+-- DEMO 3: REFERENTIAL INTEGRITY – ON DELETE CASCADE
+-- Demonstrates that deleting an app_user cascades to playlists and logs.
 -- ============================================================================
 START TRANSACTION;
 

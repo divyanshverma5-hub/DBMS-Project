@@ -1,5 +1,5 @@
 -- ============================================================================
--- SCRIPT 09: 20 COMPREHENSIVE SQL QUERIES
+-- SCRIPT 09: 18 COMPREHENSIVE SQL QUERIES
 -- Project: Music Mood Recommendation System
 -- Database: music_mood_db
 -- Academic Requirement: At least 10 queries covering SELECT, WHERE, aggregates,
@@ -199,26 +199,7 @@ GROUP BY m.mood_id, m.name
 ORDER BY user_mood_logs_count DESC;
 
 -- ============================================================================
--- QUERY 12: Highest Rated Tracks (Minimum 3 Ratings)
--- Business Question: Find the highest rated tracks that have received at least 3 ratings,
--- displaying average rating and number of reviews.
--- ============================================================================
-SELECT 
-    t.track_id,
-    t.title AS track_title,
-    ar.name AS artist_name,
-    ROUND(AVG(r.rating), 2) AS avg_user_rating,
-    COUNT(r.rating) AS review_count
-FROM rating r
-INNER JOIN track t ON r.track_id = t.track_id
-INNER JOIN track_artist ta ON t.track_id = ta.track_id AND ta.role = 'main'
-INNER JOIN artist ar ON ta.artist_id = ar.artist_id
-GROUP BY t.track_id, t.title, ar.name
-HAVING COUNT(r.rating) >= 3
-ORDER BY avg_user_rating DESC, review_count DESC;
-
--- ============================================================================
--- QUERY 13: Playlist Statistics for Weak Entity
+-- QUERY 12: Playlist Statistics for Weak Entity
 -- Business Question: Display each user's playlists along with total songs, total playtime,
 -- and the themed mood name (if assigned).
 -- ============================================================================
@@ -238,7 +219,7 @@ GROUP BY u.username, p.user_id, p.playlist_no, p.name, themed_mood
 ORDER BY u.username, p.playlist_no;
 
 -- ============================================================================
--- QUERY 14: Listening History Analysis with Skip Classification
+-- QUERY 13: Listening History Analysis with Skip Classification
 -- Business Question: Categorize stream sessions for user 'sarah_connor' into
 -- 'Skipped', 'Partial Listen', or 'Full Play' based on completion percentage.
 -- ============================================================================
@@ -261,7 +242,7 @@ WHERE u.username = 'sarah_connor'
 ORDER BY lh.played_at DESC;
 
 -- ============================================================================
--- QUERY 15: Recursive CTE – Mood Hierarchy Traversal
+-- QUERY 14: Recursive CTE – Mood Hierarchy Traversal
 -- Business Question: Display the complete tree hierarchy of moods, showing each mood's
 -- level (depth 0 = root, depth 1 = child) and full ancestral breadcrumb path.
 -- ============================================================================
@@ -296,7 +277,7 @@ FROM mood_tree
 ORDER BY level ASC, mood_name ASC;
 
 -- ============================================================================
--- QUERY 16: Recursive CTE – Social Follow Network (Degrees of Separation)
+-- QUERY 15: Recursive CTE – Social Follow Network (Degrees of Separation)
 -- Business Question: Traverse the follow graph starting from user 'alex_smith' (user_id = 1)
 -- to discover friends and friends-of-friends up to 2 degrees of separation.
 -- ============================================================================
@@ -332,7 +313,7 @@ FROM follow_graph
 ORDER BY degree, followee_id;
 
 -- ============================================================================
--- QUERY 17: Window Function – Rank Tracks by Play Count Within Each Genre
+-- QUERY 16: Window Function – Rank Tracks by Play Count Within Each Genre
 -- Business Question: Use DENSE_RANK() to find the top 2 most popular tracks
 -- within each music genre.
 -- ============================================================================
@@ -361,7 +342,7 @@ WHERE rank_in_genre <= 2
 ORDER BY genre_name, rank_in_genre;
 
 -- ============================================================================
--- QUERY 18: Window Function – Cumulative & Running Total of Stream Minutes
+-- QUERY 17: Window Function – Cumulative & Running Total of Stream Minutes
 -- Business Question: Calculate a running total of minutes listened over time
 -- for user 'alex_smith'.
 -- ============================================================================
@@ -380,29 +361,7 @@ WHERE lh.user_id = 1
 ORDER BY lh.played_at ASC;
 
 -- ============================================================================
--- QUERY 19: Recommendations Generated for a Specific User with Mood Context
--- Business Question: Retrieve the top personalized recommendations generated for
--- 'sarah_connor' (user_id = 2) when she logged an 'Energetic' or 'Euphoric' mood.
--- ============================================================================
-SELECT 
-    rec.rec_id,
-    u.username,
-    t.title AS recommended_track,
-    ar.name AS artist_name,
-    m.name AS mood_context,
-    rec.score AS recommendation_score,
-    rec.generated_at
-FROM recommendation rec
-INNER JOIN app_user u ON rec.user_id = u.user_id
-INNER JOIN track t ON rec.track_id = t.track_id
-INNER JOIN track_artist ta ON t.track_id = ta.track_id AND ta.role = 'main'
-INNER JOIN artist ar ON ta.artist_id = ar.artist_id
-INNER JOIN mood m ON rec.mood_id = m.mood_id
-WHERE rec.user_id = 2 AND m.name IN ('Energetic', 'Euphoric')
-ORDER BY rec.score DESC, rec.generated_at DESC;
-
--- ============================================================================
--- QUERY 20: Optimization & Index Demonstration (Valence/Energy Spatial Range)
+-- QUERY 19: Optimization & Index Demonstration (Valence/Energy Spatial Range)
 -- Business Question: Recommend songs for a 'Calm & Focused' mental state
 -- (Valence between 0.50 and 0.85, Energy between 0.15 and 0.45).
 -- Uses idx_track_valence_energy index.
