@@ -48,6 +48,7 @@ export default function MusicPlayer() {
     setVolume(newValue)
   }
 
+  const hasYouTubeVideo = Boolean(currentTrack.youtube_video_id)
   const hasAudioUrl = Boolean(currentTrack.audio_url && currentTrack.audio_url.trim())
 
   return (
@@ -147,81 +148,77 @@ export default function MusicPlayer() {
           </Box>
         </Box>
 
-        {/* Center: Controls & Scrubber */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexGrow: 1, maxWidth: 640 }}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Tooltip title="Previous Track">
-              <IconButton size="small" onClick={prevTrack} sx={{ color: '#475569' }}>
-                <SkipPreviousRoundedIcon />
-              </IconButton>
-            </Tooltip>
-
-            <Tooltip title={!hasAudioUrl ? 'No audio file available' : isPlaying ? 'Pause' : 'Play'}>
-              <span>
-                <IconButton
-                  disabled={!hasAudioUrl}
-                  onClick={togglePlay}
+        {/* Center: YouTube's own controls for YouTube-backed tracks; native controls for MP3 tracks */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexGrow: 1, maxWidth: hasYouTubeVideo ? 360 : 640, minWidth: 0 }}>
+          {hasYouTubeVideo ? (
+            <Box sx={{ width: '100%', maxWidth: 300, aspectRatio: '16 / 9', overflow: 'hidden', borderRadius: 2, backgroundColor: '#0f172a' }}>
+              <iframe
+                key={currentTrack.youtube_video_id}
+                title={`YouTube playback: ${currentTrack.title}`}
+                src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(currentTrack.youtube_video_id)}?autoplay=1&controls=1&rel=0&playsinline=1`}
+                allow="autoplay; encrypted-media; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+                style={{ width: '100%', height: '100%', border: 0 }}
+              />
+            </Box>
+          ) : (
+            <>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Tooltip title="Previous Track">
+                  <IconButton size="small" onClick={prevTrack} sx={{ color: '#475569' }}>
+                    <SkipPreviousRoundedIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={!hasAudioUrl ? 'No audio file available' : isPlaying ? 'Pause' : 'Play'}>
+                  <span>
+                    <IconButton
+                      disabled={!hasAudioUrl}
+                      onClick={togglePlay}
+                      sx={{
+                        backgroundColor: hasAudioUrl ? '#6366f1' : '#cbd5e1',
+                        color: '#ffffff',
+                        width: 40,
+                        height: 40,
+                        '&:hover': { backgroundColor: hasAudioUrl ? '#4f46e5' : '#cbd5e1' },
+                      }}
+                    >
+                      {isPlaying ? <PauseRoundedIcon /> : <PlayArrowRoundedIcon />}
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title="Next Track">
+                  <IconButton size="small" onClick={nextTrack} sx={{ color: '#475569' }}>
+                    <SkipNextRoundedIcon />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
+              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: 1.5, mt: 0.25 }}>
+                <Typography variant="caption" sx={{ color: '#64748b', minWidth: 32, textAlign: 'right', fontSize: '0.75rem' }}>
+                  {formatDuration(currentTime)}
+                </Typography>
+                <Slider
+                  size="small"
+                  value={currentTime}
+                  max={duration || currentTrack.duration_sec || 100}
+                  onChange={handleSeekChange}
+                  disabled={!hasAudioUrl || duration === 0}
                   sx={{
-                    backgroundColor: hasAudioUrl ? '#6366f1' : '#cbd5e1',
-                    color: '#ffffff',
-                    width: 40,
-                    height: 40,
-                    '&:hover': {
-                      backgroundColor: hasAudioUrl ? '#4f46e5' : '#cbd5e1',
-                    },
+                    color: '#6366f1', height: 4,
+                    '& .MuiSlider-thumb': { width: 10, height: 10 },
+                    '& .MuiSlider-rail': { opacity: 0.3, backgroundColor: '#94a3b8' },
                   }}
-                >
-                  {isPlaying ? <PauseRoundedIcon /> : <PlayArrowRoundedIcon />}
-                </IconButton>
-              </span>
-            </Tooltip>
-
-            <Tooltip title="Next Track">
-              <IconButton size="small" onClick={nextTrack} sx={{ color: '#475569' }}>
-                <SkipNextRoundedIcon />
-              </IconButton>
-            </Tooltip>
-          </Stack>
-
-          {/* Scrubber slider */}
-          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: 1.5, mt: 0.25 }}>
-            <Typography variant="caption" sx={{ color: '#64748b', minWidth: 32, textAlign: 'right', fontSize: '0.75rem' }}>
-              {formatDuration(currentTime)}
-            </Typography>
-            <Slider
-              size="small"
-              value={currentTime}
-              max={duration || currentTrack.duration_sec || 100}
-              onChange={handleSeekChange}
-              disabled={!hasAudioUrl || duration === 0}
-              sx={{
-                color: '#6366f1',
-                height: 4,
-                '& .MuiSlider-thumb': {
-                  width: 10,
-                  height: 10,
-                  transition: '0.2s cubic-bezier(.47,1.64,.41,.8)',
-                  '&:before': {
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-                  },
-                  '&:hover, &.Mui-focusVisible': {
-                    boxShadow: '0px 0px 0px 8px rgba(99, 102, 241, 0.16)',
-                  },
-                },
-                '& .MuiSlider-rail': {
-                  opacity: 0.3,
-                  backgroundColor: '#94a3b8',
-                },
-              }}
-            />
-            <Typography variant="caption" sx={{ color: '#64748b', minWidth: 32, fontSize: '0.75rem' }}>
-              {formatDuration(duration || currentTrack.duration_sec)}
-            </Typography>
-          </Box>
+                />
+                <Typography variant="caption" sx={{ color: '#64748b', minWidth: 32, fontSize: '0.75rem' }}>
+                  {formatDuration(duration || currentTrack.duration_sec)}
+                </Typography>
+              </Box>
+            </>
+          )}
         </Box>
 
         {/* Right: Volume Controls */}
-        <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', width: 160, gap: 1 }}>
+        <Box sx={{ display: hasYouTubeVideo ? 'none' : { xs: 'none', sm: 'flex' }, alignItems: 'center', width: 160, gap: 1 }}>
           <IconButton size="small" onClick={toggleMute} sx={{ color: '#64748b' }}>
             {isMuted || volume === 0 ? <VolumeOffRoundedIcon fontSize="small" /> : <VolumeUpRoundedIcon fontSize="small" />}
           </IconButton>
