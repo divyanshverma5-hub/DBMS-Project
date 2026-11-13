@@ -8,7 +8,6 @@ import { PlayerProvider } from './context/PlayerContext'
 import MainLayout from './layouts/MainLayout'
 import ProtectedRoute from './components/common/ProtectedRoute'
 
-// Pages
 import HomePage from './pages/HomePage'
 import ExplorePage from './pages/ExplorePage'
 import MoodsPage from './pages/MoodsPage'
@@ -32,7 +31,6 @@ export default function App() {
         <PlayerProvider>
           <BrowserRouter>
             <Routes>
-              {/* Main Application Shell */}
               <Route path="/" element={<MainLayout />}>
                 <Route index element={<HomePage />} />
                 <Route path="explore" element={<ExplorePage />} />
@@ -44,45 +42,22 @@ export default function App() {
                 <Route path="users/:id" element={<UserProfilePage />} />
                 <Route path="login" element={<LoginPage />} />
                 <Route path="register" element={<RegisterPage />} />
-
-                {/* Protected Routes */}
                 <Route
                   path="playlists"
-                  element={
-                    <ProtectedRoute>
-                      <PlaylistsPage />
-                    </ProtectedRoute>
-                  }
+                  element={<ProtectedRoute><PlaylistsPage /></ProtectedRoute>}
                 />
                 <Route
                   path="playlists/:playlistNo"
-                  element={
-                    <ProtectedRoute>
-                      <PlaylistDetailPage />
-                    </ProtectedRoute>
-                  }
+                  element={<ProtectedRoute><PlaylistDetailPage /></ProtectedRoute>}
                 />
                 <Route
                   path="history"
-                  element={
-                    <ProtectedRoute>
-                      <HistoryPage />
-                    </ProtectedRoute>
-                  }
-                />
-                    </ProtectedRoute>
-                  }
+                  element={<ProtectedRoute><HistoryPage /></ProtectedRoute>}
                 />
                 <Route
                   path="profile"
-                  element={
-                    <ProtectedRoute>
-                      <ProfilePage />
-                    </ProtectedRoute>
-                  }
+                  element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}
                 />
-
-                {/* Fallback */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
             </Routes>
