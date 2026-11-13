@@ -76,6 +76,9 @@ export default function MusicPlayer() {
     let progressTimer = null
     let listenedSeconds = 0
     let lastVideoTime = null
+    let listenId = null
+    let lastSavedDuration = 0
+    let saveQueue = Promise.resolve()
     let active = true
 
     const stopProgressTimer = () => {
@@ -86,14 +89,28 @@ export default function MusicPlayer() {
       lastVideoTime = null
     }
 
-    const flushListeningEvent = () => {
-      const durationListened = Math.floor(listenedSeconds)
-      listenedSeconds = 0
-      if (!isAuthenticatedRef.current || durationListened < 1) return
+    // Create one history row per listening session, then update its duration.
+    // While playback continues, persist every 15 seconds after the first 30 seconds.
+    const persistListeningEvent = (force = false) => {
+      saveQueue = saveQueue.then(async () => {
+        const durationListened = Math.floor(listenedSeconds)
+        if (!isAuthenticatedRef.current || durationListened < 1) return
+        if (!force && (durationListened < 30 || durationListened - lastSavedDuration < 15)) return
 
-      trackService.recordListen(trackId, durationListened).catch((error) => {
+        if (!listenId) {
+          const session = await trackService.recordListen(trackId, 0)
+          listenId = session.listen_id
+        }
+
+        if (durationListened > lastSavedDuration) {
+          await trackService.updateListen(listenId, durationListened)
+          lastSavedDuration = durationListened
+        }
+      }).catch((error) => {
         console.warn('Could not save listening history:', error.message)
       })
+
+      return saveQueue
     }
 
     const startProgressTimer = () => {
@@ -110,6 +127,11 @@ export default function MusicPlayer() {
             if (delta > 0 && delta <= 3) listenedSeconds += delta
           }
           lastVideoTime = currentVideoTime
+
+          if (Math.floor(listenedSeconds) >= 30 &&
+              Math.floor(listenedSeconds) - lastSavedDuration >= 15) {
+            persistListeningEvent()
+          }
         } catch {
           stopProgressTimer()
         }
@@ -147,7 +169,7 @@ export default function MusicPlayer() {
               } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
                 stopProgressTimer()
                 setPlaybackState(false)
-                flushListeningEvent()
+                persistListeningEvent(true)
               } else if (event.data === YT.PlayerState.BUFFERING || event.data === YT.PlayerState.CUED) {
                 stopProgressTimer()
               }
@@ -169,7 +191,7 @@ export default function MusicPlayer() {
     return () => {
       active = false
       stopProgressTimer()
-      flushListeningEvent()
+      persistListeningEvent(true)
       if (player) {
         try { player.destroy() } catch (error) { console.warn('Could not destroy YouTube player:', error) }
       }
