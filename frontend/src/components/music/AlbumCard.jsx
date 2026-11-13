@@ -32,9 +32,9 @@ export default function AlbumCard({ album }) {
           overflow: 'hidden',
         }}
       >
-        {album.cover_image_url ? (
+        {(album.cover_image_url || album.artist_image_url) ? (
           <img
-            src={album.cover_image_url}
+            src={album.cover_image_url || album.artist_image_url}
             alt={album.title}
             style={{
               position: 'absolute',
