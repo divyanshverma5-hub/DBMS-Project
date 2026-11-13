@@ -132,6 +132,15 @@ const recordListenRules = [
     .withMessage('Duration listened must be a non-negative integer in seconds'),
 ];
 
+const updateListenRules = [
+  param('listenId')
+    .isInt({ min: 1 })
+    .withMessage('Listening session ID must be a positive integer'),
+  body('duration_listened_sec')
+    .isInt({ min: 0 })
+    .withMessage('Duration listened must be a non-negative integer in seconds'),
+];
+
 module.exports = {
   registerRules,
   loginRules,
@@ -141,4 +150,5 @@ module.exports = {
   addTrackToPlaylistRules,
   logMoodRules,
   recordListenRules,
+  updateListenRules,
 };
