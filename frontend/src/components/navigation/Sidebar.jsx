@@ -64,7 +64,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
           <MoodRoundedIcon />
         </Box>
         <Box>
-          <Typography variant="subtitle1" fontWeight={700} color="#0f172a" lineHeight={1.2}>
+          <Typography variant="subtitle1" fontWeight={700} color="#0f172a" sx={{ lineHeight: 1.2 }}>
             Music Mood
           </Typography>
           <Typography variant="caption" color="text.secondary" fontWeight={500}>
@@ -108,9 +108,13 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
                 </ListItemIcon>
                 <ListItemText
                   primary={item.label}
-                  primaryTypographyProps={{
-                    fontSize: '0.9rem',
-                    fontWeight: isActive ? 600 : 500,
+                  slotProps={{
+                    primary: {
+                      sx: {
+                        fontSize: '0.9rem',
+                        fontWeight: isActive ? 600 : 500,
+                      },
+                    },
                   }}
                 />
               </ListItemButton>

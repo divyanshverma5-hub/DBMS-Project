@@ -193,7 +193,7 @@ export default function RegisterPage() {
                 label="Birth Date"
                 value={birthDate}
                 onChange={(e) => setBirthDate(e.target.value)}
-                InputLabelProps={{ shrink: true }}
+                slotProps={{ inputLabel: { shrink: true } }}
                 disabled={loading}
               />
             </Grid>

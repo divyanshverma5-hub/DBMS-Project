@@ -351,7 +351,7 @@ export default function ProfilePage() {
               label="Birth Date"
               value={editBirthDate}
               onChange={(e) => setEditBirthDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
               disabled={editSubmitting}
             />
 

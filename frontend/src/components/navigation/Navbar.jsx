@@ -146,7 +146,7 @@ export default function Navbar({ onMobileToggle }) {
                   {user.first_name ? user.first_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
                 </Avatar>
                 <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'left' }}>
-                  <Typography variant="body2" fontWeight={600} color="#0f172a" lineHeight={1.2}>
+                  <Typography variant="body2" fontWeight={600} color="#0f172a" sx={{ lineHeight: 1.2 }}>
                     {user.first_name ? `${user.first_name} ${user.last_name || ''}` : user.username}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
