@@ -31,7 +31,7 @@ async function getTracks(req, res, next) {
 
     let query = `
       SELECT t.track_id, t.title, t.track_no, t.duration_sec,
-             t.valence, t.energy, t.tempo_bpm, t.audio_url,
+             t.valence, t.energy, t.tempo_bpm, t.youtube_video_id,
              al.album_id, al.title AS album_title, al.cover_image_url,
              ar.artist_id, ar.name AS artist_name,
              fn_play_count(t.track_id) AS play_count
@@ -86,6 +86,8 @@ async function getTracks(req, res, next) {
       params.push(parseFloat(max_energy));
     }
 
+    conditions.push('t.youtube_video_id IS NOT NULL');
+
     if (conditions.length > 0) {
       query += ' WHERE ' + conditions.join(' AND ');
     }
@@ -129,7 +131,7 @@ async function getTrackById(req, res, next) {
 
     const [tracks] = await pool.query(
       `SELECT t.track_id, t.title, t.track_no, t.duration_sec,
-              t.valence, t.energy, t.tempo_bpm, t.audio_url,
+              t.valence, t.energy, t.tempo_bpm, t.youtube_video_id,
               al.album_id, al.title AS album_title, al.release_date, al.cover_image_url,
               fn_play_count(t.track_id) AS play_count,
               ROUND(COALESCE((SELECT AVG(rating) FROM rating WHERE track_id = t.track_id), 0), 2) AS avg_rating,

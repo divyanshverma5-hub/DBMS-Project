@@ -1,54 +1,14 @@
 import React from 'react'
-import {
-  Box,
-  Typography,
-  IconButton,
-  Slider,
-  Stack,
-  Tooltip,
-  Alert,
-  Chip,
-} from '@mui/material'
-import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded'
-import PauseRoundedIcon from '@mui/icons-material/PauseRounded'
+import { Box, Typography, IconButton, Stack, Tooltip, Alert, Chip } from '@mui/material'
 import SkipNextRoundedIcon from '@mui/icons-material/SkipNextRounded'
 import SkipPreviousRoundedIcon from '@mui/icons-material/SkipPreviousRounded'
-import VolumeUpRoundedIcon from '@mui/icons-material/VolumeUpRounded'
-import VolumeOffRoundedIcon from '@mui/icons-material/VolumeOffRounded'
 import MusicNoteIcon from '@mui/icons-material/MusicNote'
 import { usePlayer } from '../../context/PlayerContext'
-import { formatDuration } from '../../utils/formatters'
 
 export default function MusicPlayer() {
-  const {
-    currentTrack,
-    isPlaying,
-    currentTime,
-    duration,
-    volume,
-    isMuted,
-    playbackError,
-    togglePlay,
-    seek,
-    setVolume,
-    toggleMute,
-    nextTrack,
-    prevTrack,
-  } = usePlayer()
+  const { currentTrack, playbackError, nextTrack, prevTrack } = usePlayer()
 
-  if (!currentTrack) {
-    return null
-  }
-
-  const handleSeekChange = (_, newValue) => {
-    seek(newValue)
-  }
-
-  const handleVolumeChange = (_, newValue) => {
-    setVolume(newValue)
-  }
-
-  const hasAudioUrl = Boolean(currentTrack.audio_url && currentTrack.audio_url.trim())
+  if (!currentTrack) return null
 
   return (
     <Box
@@ -66,183 +26,59 @@ export default function MusicPlayer() {
       }}
     >
       {playbackError && (
-        <Alert
-          severity="warning"
-          variant="filled"
-          sx={{
-            py: 0.25,
-            px: 2,
-            mb: 1,
-            fontSize: '0.8rem',
-            borderRadius: 2,
-            alignItems: 'center',
-          }}
-        >
+        <Alert severity="warning" variant="filled" sx={{ py: 0.25, px: 2, mb: 1, fontSize: '0.8rem', borderRadius: 2 }}>
           {playbackError}
         </Alert>
       )}
 
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: { xs: 1, md: 3 },
-          maxWidth: 1600,
-          mx: 'auto',
-        }}
-      >
-        {/* Left: Track Information */}
-        <Box sx={{ display: 'flex', alignItems: 'center', minWidth: { xs: 140, sm: 220, md: 280 }, maxWidth: 360, gap: 1.5 }}>
-          <Box
-            sx={{
-              width: { xs: 44, sm: 52 },
-              height: { xs: 44, sm: 52 },
-              borderRadius: 2.5,
-              overflow: 'hidden',
-              flexShrink: 0,
-              backgroundColor: '#f1f5f9',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-            }}
-          >
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: { xs: 1, md: 3 }, maxWidth: 1600, mx: 'auto' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', minWidth: { xs: 110, sm: 180, md: 240 }, maxWidth: 320, gap: 1.5 }}>
+          <Box sx={{ width: 48, height: 48, borderRadius: 2.5, overflow: 'hidden', flexShrink: 0, backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {currentTrack.cover_image_url ? (
-              <img
-                src={currentTrack.cover_image_url}
-                alt={currentTrack.title}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
+              <img src={currentTrack.cover_image_url} alt={currentTrack.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               <MusicNoteIcon sx={{ color: '#94a3b8' }} />
             )}
           </Box>
           <Box sx={{ overflow: 'hidden' }}>
-            <Typography
-              variant="subtitle2"
-              fontWeight={600}
-              noWrap
-              sx={{ color: '#0f172a', fontSize: { xs: '0.85rem', sm: '0.95rem' } }}
-            >
-              {currentTrack.title}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap display="block">
-              {currentTrack.artist_name || 'Unknown Artist'}
-            </Typography>
-            {currentTrack.energy !== undefined && currentTrack.energy !== null && (
-              <Box sx={{ display: { xs: 'none', lg: 'flex' }, gap: 0.5, mt: 0.25 }}>
-                <Chip
-                  size="small"
-                  label={`⚡ ${(currentTrack.energy * 100).toFixed(0)}%`}
-                  sx={{ height: 18, fontSize: '0.65rem', backgroundColor: '#fef3c7', color: '#b45309' }}
-                />
-                <Chip
-                  size="small"
-                  label={`😊 ${(currentTrack.valence * 100).toFixed(0)}%`}
-                  sx={{ height: 18, fontSize: '0.65rem', backgroundColor: '#ecfdf5', color: '#047857' }}
-                />
-              </Box>
+            <Typography variant="subtitle2" fontWeight={600} noWrap sx={{ color: '#0f172a' }}>{currentTrack.title}</Typography>
+            <Typography variant="caption" color="text.secondary" noWrap display="block">{currentTrack.artist_name || 'Unknown Artist'}</Typography>
+            {currentTrack.energy != null && (
+              <Stack direction="row" spacing={0.5} sx={{ display: { xs: 'none', lg: 'flex' }, mt: 0.25 }}>
+                <Chip size="small" label={`⚡ ${(currentTrack.energy * 100).toFixed(0)}%`} sx={{ height: 18, fontSize: '0.65rem' }} />
+                <Chip size="small" label={`😊 ${(currentTrack.valence * 100).toFixed(0)}%`} sx={{ height: 18, fontSize: '0.65rem' }} />
+              </Stack>
             )}
           </Box>
         </Box>
 
-        {/* Center: Controls & Scrubber */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexGrow: 1, maxWidth: 640 }}>
-          <Stack direction="row" spacing={1} alignItems="center">
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexGrow: 1, minWidth: 0, maxWidth: 480 }}>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
             <Tooltip title="Previous Track">
-              <IconButton size="small" onClick={prevTrack} sx={{ color: '#475569' }}>
-                <SkipPreviousRoundedIcon />
-              </IconButton>
+              <IconButton size="small" onClick={prevTrack} sx={{ color: '#475569' }}><SkipPreviousRoundedIcon /></IconButton>
             </Tooltip>
-
-            <Tooltip title={!hasAudioUrl ? 'No audio file available' : isPlaying ? 'Pause' : 'Play'}>
-              <span>
-                <IconButton
-                  disabled={!hasAudioUrl}
-                  onClick={togglePlay}
-                  sx={{
-                    backgroundColor: hasAudioUrl ? '#6366f1' : '#cbd5e1',
-                    color: '#ffffff',
-                    width: 40,
-                    height: 40,
-                    '&:hover': {
-                      backgroundColor: hasAudioUrl ? '#4f46e5' : '#cbd5e1',
-                    },
-                  }}
-                >
-                  {isPlaying ? <PauseRoundedIcon /> : <PlayArrowRoundedIcon />}
-                </IconButton>
-              </span>
-            </Tooltip>
-
+            <Typography variant="caption" color="text.secondary">YouTube playback</Typography>
             <Tooltip title="Next Track">
-              <IconButton size="small" onClick={nextTrack} sx={{ color: '#475569' }}>
-                <SkipNextRoundedIcon />
-              </IconButton>
+              <IconButton size="small" onClick={nextTrack} sx={{ color: '#475569' }}><SkipNextRoundedIcon /></IconButton>
             </Tooltip>
           </Stack>
-
-          {/* Scrubber slider */}
-          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: 1.5, mt: 0.25 }}>
-            <Typography variant="caption" sx={{ color: '#64748b', minWidth: 32, textAlign: 'right', fontSize: '0.75rem' }}>
-              {formatDuration(currentTime)}
-            </Typography>
-            <Slider
-              size="small"
-              value={currentTime}
-              max={duration || currentTrack.duration_sec || 100}
-              onChange={handleSeekChange}
-              disabled={!hasAudioUrl || duration === 0}
-              sx={{
-                color: '#6366f1',
-                height: 4,
-                '& .MuiSlider-thumb': {
-                  width: 10,
-                  height: 10,
-                  transition: '0.2s cubic-bezier(.47,1.64,.41,.8)',
-                  '&:before': {
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-                  },
-                  '&:hover, &.Mui-focusVisible': {
-                    boxShadow: '0px 0px 0px 8px rgba(99, 102, 241, 0.16)',
-                  },
-                },
-                '& .MuiSlider-rail': {
-                  opacity: 0.3,
-                  backgroundColor: '#94a3b8',
-                },
-              }}
-            />
-            <Typography variant="caption" sx={{ color: '#64748b', minWidth: 32, fontSize: '0.75rem' }}>
-              {formatDuration(duration || currentTrack.duration_sec)}
-            </Typography>
-          </Box>
+          {currentTrack.youtube_video_id ? (
+            <Box sx={{ width: '100%', maxWidth: 360, aspectRatio: '16 / 9', overflow: 'hidden', borderRadius: 2, backgroundColor: '#0f172a' }}>
+              <iframe
+                key={currentTrack.youtube_video_id}
+                title={`YouTube playback: ${currentTrack.title}`}
+                src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(currentTrack.youtube_video_id)}?autoplay=1&controls=1&rel=0&playsinline=1`}
+                allow="autoplay; encrypted-media; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+                style={{ width: '100%', height: '100%', border: 0 }}
+              />
+            </Box>
+          ) : (
+            <Typography variant="caption" color="error">This track does not have a YouTube video linked yet.</Typography>
+          )}
         </Box>
-
-        {/* Right: Volume Controls */}
-        <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', width: 160, gap: 1 }}>
-          <IconButton size="small" onClick={toggleMute} sx={{ color: '#64748b' }}>
-            {isMuted || volume === 0 ? <VolumeOffRoundedIcon fontSize="small" /> : <VolumeUpRoundedIcon fontSize="small" />}
-          </IconButton>
-          <Slider
-            size="small"
-            value={isMuted ? 0 : volume}
-            min={0}
-            max={1}
-            step={0.01}
-            onChange={handleVolumeChange}
-            sx={{
-              color: '#64748b',
-              width: 90,
-              height: 4,
-              '& .MuiSlider-thumb': {
-                width: 10,
-                height: 10,
-              },
-            }}
-          />
-        </Box>
+        <Box sx={{ display: { xs: 'none', sm: 'block' }, width: { sm: 110, md: 180 } }} />
       </Box>
     </Box>
   )
