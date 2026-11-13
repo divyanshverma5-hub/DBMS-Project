@@ -2,7 +2,7 @@
 -- SCRIPT 02: RELATIONAL SCHEMA DEFINITION (DDL)
 -- Project: Music Mood Recommendation System
 -- Database: music_mood_db
--- Tables: 19 Relational Tables (All BCNF Verified)
+-- Tables: 17 Relational Tables (All BCNF Verified)
 -- Engine: InnoDB
 -- Note: Uses CREATE TABLE IF NOT EXISTS to prevent accidental dropping of existing tables.
 -- For a destructive clean reinstall, see 00_reset_database_dev_only.sql.
@@ -237,24 +237,7 @@ CREATE TABLE IF NOT EXISTS listening_history (
     CONSTRAINT chk_listening_history_duration CHECK (duration_listened_sec >= 0)
 ) ENGINE=InnoDB;
 
--- Table 15: rating (M:N Relationship: rates)
--- Composite PK = (user_id, track_id) enforcing exactly one current rating per track
-CREATE TABLE IF NOT EXISTS rating (
-    user_id  INT UNSIGNED     NOT NULL,
-    track_id INT UNSIGNED     NOT NULL,
-    rating   TINYINT UNSIGNED NOT NULL,
-    rated_at DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_rating PRIMARY KEY (user_id, track_id),
-    CONSTRAINT fk_rating_user FOREIGN KEY (user_id)
-        REFERENCES app_user (user_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_rating_track FOREIGN KEY (track_id)
-        REFERENCES track (track_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT chk_rating_range CHECK (rating >= 1 AND rating <= 5)
-) ENGINE=InnoDB;
-
--- Table 16: user_follow (Recursive M:N Relationship: follows)
+-- Table 15: user_follow (Recursive M:N Relationship: follows)
 -- Roles: follower_id, followee_id
 CREATE TABLE IF NOT EXISTS user_follow (
     follower_id INT UNSIGNED NOT NULL,
@@ -274,7 +257,7 @@ CREATE TABLE IF NOT EXISTS user_follow (
 -- GROUP 5: PLAYLISTS & WEAK ENTITY
 -- ============================================================================
 
--- Table 17: playlist (Weak Entity identifying on app_user via owns)
+-- Table 16: playlist (Weak Entity identifying on app_user via owns)
 -- Composite PK = (user_id, playlist_no)
 -- playlist_no is discriminator (partial key), generated per-user via sp_create_playlist
 -- Derived attributes: track_count(), total_duration()
@@ -293,7 +276,7 @@ CREATE TABLE IF NOT EXISTS playlist (
         ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- Table 18: playlist_track (M:N Relationship: includes)
+-- Table 17: playlist_track (M:N Relationship: includes)
 -- Composite PK = (user_id, playlist_no, track_id)
 -- Composite FK references weak entity's composite PK (user_id, playlist_no)
 CREATE TABLE IF NOT EXISTS playlist_track (
@@ -313,31 +296,3 @@ CREATE TABLE IF NOT EXISTS playlist_track (
     CONSTRAINT chk_playlist_track_position CHECK (position > 0)
 ) ENGINE=InnoDB;
 
--- ============================================================================
--- GROUP 6: TERNARY RECOMMENDATIONS
--- ============================================================================
-
--- Table 19: recommendation (Ternary Relationship: recommends M:N:P)
--- Connects app_user × track × mood
--- Surrogate Key: rec_id
--- Natural Candidate Key with Millisecond Precision: (user_id, track_id, mood_id, generated_at)
-CREATE TABLE IF NOT EXISTS recommendation (
-    rec_id       INT UNSIGNED AUTO_INCREMENT,
-    user_id      INT UNSIGNED NOT NULL,
-    track_id     INT UNSIGNED NOT NULL,
-    mood_id      INT UNSIGNED NOT NULL,
-    score        FLOAT        NOT NULL,
-    generated_at DATETIME(3)  NOT NULL,
-    CONSTRAINT pk_recommendation PRIMARY KEY (rec_id),
-    CONSTRAINT uk_recommendation_natural UNIQUE (user_id, track_id, mood_id, generated_at),
-    CONSTRAINT fk_recommendation_user FOREIGN KEY (user_id)
-        REFERENCES app_user (user_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_recommendation_track FOREIGN KEY (track_id)
-        REFERENCES track (track_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_recommendation_mood FOREIGN KEY (mood_id)
-        REFERENCES mood (mood_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT chk_recommendation_score CHECK (score >= 0.0 AND score <= 1.0)
-) ENGINE=InnoDB;
