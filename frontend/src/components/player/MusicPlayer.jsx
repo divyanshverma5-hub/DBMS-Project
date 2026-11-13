@@ -151,7 +151,21 @@ export default function MusicPlayer() {
         {/* Center: YouTube's own controls for YouTube-backed tracks; native controls for MP3 tracks */}
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexGrow: 1, maxWidth: hasYouTubeVideo ? 360 : 640, minWidth: 0 }}>
           {hasYouTubeVideo ? (
-            <Box sx={{ width: '100%', maxWidth: 300, aspectRatio: '16 / 9', overflow: 'hidden', borderRadius: 2, backgroundColor: '#0f172a' }}>
+            <>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                <Tooltip title="Previous Track">
+                  <IconButton size="small" onClick={prevTrack} sx={{ color: '#475569' }}>
+                    <SkipPreviousRoundedIcon />
+                  </IconButton>
+                </Tooltip>
+                <Typography variant="caption" color="text.secondary">YouTube playback</Typography>
+                <Tooltip title="Next Track">
+                  <IconButton size="small" onClick={nextTrack} sx={{ color: '#475569' }}>
+                    <SkipNextRoundedIcon />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
+              <Box sx={{ width: '100%', maxWidth: 300, aspectRatio: '16 / 9', overflow: 'hidden', borderRadius: 2, backgroundColor: '#0f172a' }}>
               <iframe
                 key={currentTrack.youtube_video_id}
                 title={`YouTube playback: ${currentTrack.title}`}
@@ -161,7 +175,8 @@ export default function MusicPlayer() {
                 allowFullScreen
                 style={{ width: '100%', height: '100%', border: 0 }}
               />
-            </Box>
+              </Box>
+            </>
           ) : (
             <>
               <Stack direction="row" spacing={1} alignItems="center">
