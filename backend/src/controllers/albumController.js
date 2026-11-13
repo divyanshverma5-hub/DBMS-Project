@@ -12,7 +12,7 @@ async function getAlbums(req, res, next) {
 
     let query = `
       SELECT al.album_id, al.title, al.release_date, al.cover_image_url,
-             ar.artist_id, ar.name AS artist_name,
+             ar.artist_id, ar.name AS artist_name, ar.image_url AS artist_image_url,
              COUNT(t.track_id) AS track_count,
              COALESCE(SUM(t.duration_sec), 0) AS total_duration_sec
       FROM album al
@@ -26,7 +26,7 @@ async function getAlbums(req, res, next) {
       params.push(`%${search.trim()}%`, `%${search.trim()}%`);
     }
 
-    query += ' GROUP BY al.album_id, al.title, al.release_date, al.cover_image_url, ar.artist_id, ar.name ORDER BY al.release_date DESC LIMIT ? OFFSET ?';
+    query += ' GROUP BY al.album_id, al.title, al.release_date, al.cover_image_url, ar.artist_id, ar.name, ar.image_url ORDER BY al.release_date DESC LIMIT ? OFFSET ?';
     params.push(numLimit, numOffset);
 
     const [rows] = await pool.query(query, params);
