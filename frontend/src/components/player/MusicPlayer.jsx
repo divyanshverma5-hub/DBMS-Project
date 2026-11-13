@@ -73,14 +73,14 @@ export default function MusicPlayer() {
         )}
         {currentTrack.youtube_video_id ? (
           <Box sx={{
-            position: 'absolute',
-            right: 0,
-            top: 0,
-            width: playerCollapsed ? 1 : { xs: 176, sm: 220, md: 250 },
-            height: playerCollapsed ? 1 : 'auto',
-            aspectRatio: playerCollapsed ? '1 / 1' : '16 / 9',
+            position: playerCollapsed ? 'fixed' : 'absolute',
+            right: playerCollapsed ? 'auto' : 0,
+            left: playerCollapsed ? -10000 : 'auto',
+            top: playerCollapsed ? -10000 : 0,
+            width: { xs: 176, sm: 220, md: 250 },
+            height: { xs: 99, sm: 124, md: 141 },
             overflow: 'hidden',
-            borderRadius: playerCollapsed ? 0 : 2,
+            borderRadius: 2,
             bgcolor: '#0f172a',
             opacity: playerCollapsed ? 0 : 1,
             pointerEvents: playerCollapsed ? 'none' : 'auto',
