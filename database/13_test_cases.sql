@@ -5,7 +5,7 @@
 -- Rigorous PASS/FAIL Assertion Suite:
 -- Tests Table Counts, Derived Attribute Functions, Concurrency-Safe Stored Procedures,
 -- Unique Constraints (including playlist_track position), Referential Integrity (CASCADE/RESTRICT),
--- Disjoint ISA Trigger Enforcement, Re-rating UPSERT, and Views.
+-- Disjoint ISA Trigger Enforcement and analytical Views.
 -- Uses isolated temporary records (@test_*) and completely cleans up afterward.
 -- ============================================================================
 
@@ -22,12 +22,12 @@ CREATE TEMPORARY TABLE temp_test_results (
 );
 
 -- ============================================================================
--- TEST GROUP 1: TABLE RECORD COUNTS (ALL 19 TABLES)
+-- TEST GROUP 1: TABLE RECORD COUNTS (ALL 17 TABLES)
 -- ============================================================================
 INSERT INTO temp_test_results (test_group, test_name, status, details)
 SELECT 
     'Table Counts',
-    'Verify All 19 Tables Contain Required Sample Rows',
+    'Verify All 17 Tables Contain Required Sample Rows',
     CASE 
         WHEN (SELECT COUNT(*) FROM app_user) = 10
          AND (SELECT COUNT(*) FROM free_user) = 6
@@ -43,15 +43,13 @@ SELECT
          AND (SELECT COUNT(*) FROM track_mood) = 92
          AND (SELECT COUNT(*) FROM user_mood_log) = 42
          AND (SELECT COUNT(*) FROM listening_history) = 125
-         AND (SELECT COUNT(*) FROM rating) = 52
          AND (SELECT COUNT(*) FROM user_follow) = 18
          AND (SELECT COUNT(*) FROM playlist) = 18
          AND (SELECT COUNT(*) FROM playlist_track) = 74
-         AND (SELECT COUNT(*) FROM recommendation) = 60
         THEN 'PASS'
         ELSE 'FAIL'
     END,
-    'All 19 tables verified against exact sample targets';
+    'All 17 tables verified against exact sample targets';
 
 -- ============================================================================
 -- TEST GROUP 2: DERIVED ATTRIBUTE STORED FUNCTIONS
@@ -178,35 +176,7 @@ VALUES ('Triggers', 'Disjoint ISA Specialization (free cannot be premium)', @isa
 DROP PROCEDURE test_disjoint_isa_trigger;
 
 -- ============================================================================
--- TEST GROUP 7: RE-RATING UPSERT INTEGRITY (INSERT ... ON DUPLICATE KEY UPDATE)
--- ============================================================================
--- Rate an isolated pair (User 1 on Track 49, which currently has no rating from user 1)
-INSERT INTO rating (user_id, track_id, rating, rated_at)
-VALUES (1, 49, 2, '2025-01-01 10:00:00')
-ON DUPLICATE KEY UPDATE rating = VALUES(rating), rated_at = VALUES(rated_at);
-
--- Re-rate same track to 5 stars
-INSERT INTO rating (user_id, track_id, rating, rated_at)
-VALUES (1, 49, 5, '2025-01-02 12:00:00')
-ON DUPLICATE KEY UPDATE rating = VALUES(rating), rated_at = VALUES(rated_at);
-
-INSERT INTO temp_test_results (test_group, test_name, status, details)
-SELECT 
-    'Upsert Integrity',
-    'Re-rating updates existing row without duplicate key error',
-    CASE 
-        WHEN (SELECT COUNT(*) FROM rating WHERE user_id = 1 AND track_id = 49) = 1
-         AND (SELECT rating FROM rating WHERE user_id = 1 AND track_id = 49) = 5
-        THEN 'PASS'
-        ELSE 'FAIL'
-    END,
-    'Verified: Exactly 1 row remains with updated 5-star value';
-
--- Clean up isolated test rating
-DELETE FROM rating WHERE user_id = 1 AND track_id = 49;
-
--- ============================================================================
--- TEST GROUP 8: ANALYTICAL VIEWS
+-- TEST GROUP 7: ANALYTICAL VIEWS
 -- ============================================================================
 INSERT INTO temp_test_results (test_group, test_name, status, details)
 SELECT 
