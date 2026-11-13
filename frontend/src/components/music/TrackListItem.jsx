@@ -9,7 +9,6 @@ import {
   Paper,
 } from '@mui/material'
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded'
-import PauseRoundedIcon from '@mui/icons-material/PauseRounded'
 import PlaylistAddRoundedIcon from '@mui/icons-material/PlaylistAddRounded'
 import MusicNoteIcon from '@mui/icons-material/MusicNote'
 import { usePlayer } from '../../context/PlayerContext'
@@ -25,7 +24,7 @@ export default function TrackListItem({
   showAlbum = true,
   onRatingUpdated = null,
 }) {
-  const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayer()
+  const { currentTrack, isPlaying, playTrack } = usePlayer()
   const { isAuthenticated } = useAuth()
   const [playlistDialogOpen, setPlaylistDialogOpen] = useState(false)
   const [userRating, setUserRating] = useState(track.user_rating || null)
@@ -33,14 +32,10 @@ export default function TrackListItem({
 
   const isCurrentTrack = currentTrack?.track_id === track.track_id
   const isCurrentlyPlaying = isCurrentTrack && isPlaying
-  const hasAudioUrl = Boolean((track.audio_url && track.audio_url.trim()) || track.youtube_video_id)
+  const hasYouTubeVideo = Boolean(track.youtube_video_id)
 
   const handlePlayClick = () => {
-    if (isCurrentTrack) {
-      togglePlay()
-    } else {
-      playTrack(track, playlistContext)
-    }
+    if (!isCurrentTrack) playTrack(track, playlistContext)
   }
 
   const handleRatingChange = async (_, newRating) => {
@@ -91,15 +86,15 @@ export default function TrackListItem({
             </Typography>
           )}
 
-          <Tooltip title={!hasAudioUrl ? 'Audio preview not available' : isCurrentlyPlaying ? 'Pause' : 'Play'}>
+          <Tooltip title={!hasYouTubeVideo ? 'YouTube video unavailable' : isCurrentlyPlaying ? 'Playing on YouTube' : 'Play on YouTube'}>
             <span>
               <IconButton
                 size="small"
-                disabled={!hasAudioUrl}
+                disabled={!hasYouTubeVideo}
                 onClick={handlePlayClick}
                 sx={{
                   backgroundColor: isCurrentlyPlaying ? '#6366f1' : '#f1f5f9',
-                  color: isCurrentlyPlaying ? '#ffffff' : hasAudioUrl ? '#4f46e5' : '#94a3b8',
+                  color: isCurrentlyPlaying ? '#ffffff' : hasYouTubeVideo ? '#4f46e5' : '#94a3b8',
                   width: 36,
                   height: 36,
                   flexShrink: 0,
@@ -108,11 +103,7 @@ export default function TrackListItem({
                   },
                 }}
               >
-                {isCurrentlyPlaying ? (
-                  <PauseRoundedIcon fontSize="small" />
-                ) : (
-                  <PlayArrowRoundedIcon fontSize="small" />
-                )}
+                <PlayArrowRoundedIcon fontSize="small" />
               </IconButton>
             </span>
           </Tooltip>
