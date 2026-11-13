@@ -31,7 +31,7 @@ async function getTracks(req, res, next) {
 
     let query = `
       SELECT t.track_id, t.title, t.track_no, t.duration_sec,
-             t.valence, t.energy, t.tempo_bpm, t.audio_url, t.youtube_video_id, t.youtube_video_id,
+             t.valence, t.energy, t.tempo_bpm, t.audio_url, t.youtube_video_id,
              al.album_id, al.title AS album_title, al.cover_image_url,
              ar.artist_id, ar.name AS artist_name,
              fn_play_count(t.track_id) AS play_count
