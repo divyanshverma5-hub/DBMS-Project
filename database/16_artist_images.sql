@@ -14,7 +14,14 @@ SET image_url = CASE name
   WHEN 'Tame Impala' THEN 'https://commons.wikimedia.org/wiki/Special:FilePath/Tame_Impala.jpg?width=600'
   ELSE image_url
 END
-WHERE name IN (
-  'Shilpa Rao', 'Arijit Singh', 'The Beatles', 'Nirvana',
-  'Sunidhi Chauhan', 'Foo Fighters', 'Shreya Ghoshal', 'Tame Impala'
+WHERE artist_id IN (
+  SELECT artist_id
+  FROM (
+    SELECT artist_id
+    FROM artist
+    WHERE name IN (
+      'Shilpa Rao', 'Arijit Singh', 'The Beatles', 'Nirvana',
+      'Sunidhi Chauhan', 'Foo Fighters', 'Shreya Ghoshal', 'Tame Impala'
+    )
+  ) AS target_artists
 );
