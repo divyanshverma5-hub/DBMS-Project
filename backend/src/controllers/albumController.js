@@ -61,7 +61,7 @@ async function getAlbumById(req, res, next) {
     // Fetch ordered tracks in album
     const [tracks] = await pool.query(
       `SELECT t.track_id, t.title, t.track_no, t.duration_sec,
-              t.valence, t.energy, t.tempo_bpm, t.audio_url,
+              t.valence, t.energy, t.tempo_bpm, t.youtube_video_id,
               fn_play_count(t.track_id) AS play_count
        FROM track t
        WHERE t.album_id = ?
