@@ -16,6 +16,12 @@ export const trackService = {
     })
   },
 
+  async updateListen(listenId, durationListenedSec) {
+    return api.put(`/listening-history/listen/${listenId}`, {
+      duration_listened_sec: durationListenedSec,
+    })
+  },
+
   async getListeningHistory(params = {}) {
     return api.get('/listening-history/history', params)
   },
