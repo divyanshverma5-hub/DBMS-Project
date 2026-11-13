@@ -19,8 +19,6 @@ import AlbumDetailPage from './pages/AlbumDetailPage'
 import PlaylistsPage from './pages/PlaylistsPage'
 import PlaylistDetailPage from './pages/PlaylistDetailPage'
 import HistoryPage from './pages/HistoryPage'
-import RatingsPage from './pages/RatingsPage'
-import RecommendationsPage from './pages/RecommendationsPage'
 import ProfilePage from './pages/ProfilePage'
 import UserProfilePage from './pages/UserProfilePage'
 import LoginPage from './pages/LoginPage'
@@ -72,19 +70,6 @@ export default function App() {
                     </ProtectedRoute>
                   }
                 />
-                <Route
-                  path="ratings"
-                  element={
-                    <ProtectedRoute>
-                      <RatingsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="recommendations"
-                  element={
-                    <ProtectedRoute>
-                      <RecommendationsPage />
                     </ProtectedRoute>
                   }
                 />
