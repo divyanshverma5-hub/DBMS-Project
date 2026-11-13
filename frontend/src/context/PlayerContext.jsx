@@ -38,7 +38,9 @@ export function PlayerProvider({ children }) {
 
   // YouTube's embedded player owns play, pause, seeking, and volume controls.
   // These compatibility values remain available to existing components.
-  const togglePlay = useCallback(() => {}, [])
+  const togglePlay = useCallback(() => {
+    setIsPlaying((playing) => !playing)
+  }, [])
   const seek = useCallback(() => {}, [])
   const setVolume = useCallback(() => {}, [])
   const toggleMute = useCallback(() => {}, [])
