@@ -49,20 +49,7 @@ WHERE user_id = 2
 ORDER BY played_at DESC;
 
 -- ============================================================================
--- EXPERIMENT 3: USER LATEST RECOMMENDATION LOOKUP
--- Target Query: Retrieve top 5 most recent recommendations for user_id = 1.
--- Optimization: Index `idx_recommendation_user_generated` allows direct range scan.
--- ============================================================================
-
-EXPLAIN
-SELECT rec_id, track_id, mood_id, score, generated_at
-FROM recommendation
-WHERE user_id = 1
-ORDER BY generated_at DESC
-LIMIT 5;
-
--- ============================================================================
--- EXPERIMENT 4: INDEX FORCING VS TABLE SCAN (VIVA DEMO)
+-- EXPERIMENT 3: INDEX FORCING VS TABLE SCAN (VIVA DEMO)
 -- Compare performance using FORCE INDEX vs IGNORE INDEX on track valence.
 -- ============================================================================
 
