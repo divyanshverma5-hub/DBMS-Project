@@ -10,6 +10,8 @@ import {
   Typography,
   Divider,
   Chip,
+  IconButton,
+  Tooltip,
 } from '@mui/material'
 import { NavLink, useLocation } from 'react-router-dom'
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
@@ -22,6 +24,8 @@ import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded'
 import StarRoundedIcon from '@mui/icons-material/StarRounded'
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded'
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded'
+import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded'
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded'
 import { useAuth } from '../../context/AuthContext'
 
 const DRAWER_WIDTH = 240
@@ -40,14 +44,14 @@ const navItems = [
   { label: 'Profile', path: '/profile', icon: PersonRoundedIcon, authRequired: true },
 ]
 
-export default function Sidebar({ mobileOpen, onMobileClose }) {
+export default function Sidebar({ mobileOpen, onMobileClose, collapsed = false, onToggleCollapsed }) {
   const location = useLocation()
   const { isAuthenticated, user } = useAuth()
 
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#ffffff' }}>
       {/* Brand Header */}
-      <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+      <Box sx={{ p: collapsed ? 1.5 : 2.5, display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between', gap: 1.5 }}>
         <Box
           sx={{
             width: 38,
@@ -63,20 +67,25 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
         >
           <MoodRoundedIcon />
         </Box>
-        <Box>
+        {!collapsed && <Box>
           <Typography variant="subtitle1" fontWeight={700} color="#0f172a" sx={{ lineHeight: 1.2 }}>
             Music Mood
           </Typography>
           <Typography variant="caption" color="text.secondary" fontWeight={500}>
             Aura Recommender
           </Typography>
-        </Box>
+        </Box>}
+        <Tooltip title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+          <IconButton size="small" onClick={onToggleCollapsed} sx={{ display: { xs: 'none', md: 'inline-flex' }, color: '#64748b' }}>
+            {collapsed ? <ChevronRightRoundedIcon /> : <ChevronLeftRoundedIcon />}
+          </IconButton>
+        </Tooltip>
       </Box>
 
       <Divider sx={{ mx: 2, borderColor: '#f1f5f9' }} />
 
       {/* Nav List */}
-      <List sx={{ px: 1.5, py: 1.5, flexGrow: 1 }}>
+      <List sx={{ px: collapsed ? 1 : 1.5, py: 1.5, flexGrow: 1 }}>
         {navItems.map((item, index) => {
           if (item.divider) {
             return <Divider key={`divider-${index}`} sx={{ my: 1.5, borderColor: '#f1f5f9' }} />
@@ -87,6 +96,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
 
           return (
             <ListItem key={item.path} disablePadding sx={{ mb: 0.5 }}>
+              <Tooltip title={collapsed ? item.label : ''} placement="right">
               <ListItemButton
                 component={NavLink}
                 to={item.path}
@@ -94,7 +104,8 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
                 sx={{
                   borderRadius: 2,
                   py: 1,
-                  px: 1.5,
+                  px: collapsed ? 1.25 : 1.5,
+                  justifyContent: collapsed ? 'center' : 'flex-start',
                   backgroundColor: isActive ? 'rgba(99, 102, 241, 0.08)' : 'transparent',
                   color: isActive ? '#6366f1' : '#475569',
                   fontWeight: isActive ? 600 : 500,
@@ -103,10 +114,10 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
                   },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 36, color: isActive ? '#6366f1' : '#64748b' }}>
+                <ListItemIcon sx={{ minWidth: collapsed ? 0 : 36, color: isActive ? '#6366f1' : '#64748b' }}>
                   <IconComponent fontSize="small" />
                 </ListItemIcon>
-                <ListItemText
+                {!collapsed && <ListItemText
                   primary={item.label}
                   slotProps={{
                     primary: {
@@ -116,15 +127,16 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
                       },
                     },
                   }}
-                />
+                />}
               </ListItemButton>
+              </Tooltip>
             </ListItem>
           )
         })}
       </List>
 
       {/* User Tier / Info Badge */}
-      {isAuthenticated && user && (
+      {isAuthenticated && user && !collapsed && (
         <Box sx={{ p: 2, m: 1.5, borderRadius: 2.5, backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
           <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" gutterBottom>
             ACCOUNT STATUS
@@ -151,7 +163,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
   )
 
   return (
-    <Box component="nav" sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}>
+    <Box component="nav" sx={{ width: { md: collapsed ? 76 : DRAWER_WIDTH }, flexShrink: { md: 0 }, transition: 'width 0.2s ease' }}>
       {/* Mobile temporary drawer */}
       <Drawer
         variant="temporary"
@@ -171,7 +183,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
         variant="permanent"
         sx={{
           display: { xs: 'none', md: 'block' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: DRAWER_WIDTH, borderRight: '1px solid #e2e8f0' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: collapsed ? 76 : DRAWER_WIDTH, borderRight: '1px solid #e2e8f0', transition: 'width 0.2s ease' },
         }}
         open
       >
