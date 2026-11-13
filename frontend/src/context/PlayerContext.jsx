@@ -183,7 +183,7 @@ export function PlayerProvider({ children }) {
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current
-    if (!currentTrack) return
+    if (!currentTrack || currentTrack.youtube_video_id) return
 
     if (isPlaying) {
       audio.pause()
