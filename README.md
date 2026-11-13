@@ -1,16 +1,16 @@
-# 🎵 Music Mood Recommendation System
+# 🎵 Music Mood Player
 
-A full-stack **Music Mood Recommendation System** built as a DBMS final project. It recommends eligible tracks using mood-specific valence and energy targets, while demonstrating relational database design, stored procedures, triggers, views, transactions, indexing, and role-based access.
+A full-stack **Music Mood Player** built as a DBMS final project. Browse a music catalogue, discover tracks by mood, play YouTube-linked songs, create playlists, and review listening and mood history, while demonstrating relational database design, stored procedures, triggers, views, transactions, indexing, and role-based access.
 
 ## Features
 
 - User registration, login, and Free/Premium account types
 - Artist, album, track, genre, and mood browsing
-- Mood-based recommendations using normalized Euclidean distance in valence/energy space
-- Bloom Filter pre-screening of recently heard tracks, with exact MySQL verification to prevent false-positive exclusions
-- Listening history, ratings, follows, and playlists
+- YouTube-only playback for catalogue tracks with verified video IDs
+- Mood-based catalogue discovery and mood-session logging
+- Personal playlists with ordered track insertion and removal
+- Listening history with actual playback-duration tracking
 - Authenticated API and role/privilege demonstration in MySQL
-- Recommendation generation persisted to the existing `recommendation` table
 
 ## Technology
 
@@ -94,32 +94,8 @@ The Vite development server normally listens on `http://localhost:5173`.
 | `DB_NAME` | Database name (default `music_mood_db`) |
 | `JWT_SECRET` | Required random signing secret, at least 32 bytes |
 | `JWT_EXPIRES_IN` | Token lifetime (default `7d`) |
-| `RECOMMENDATION_RECENT_DAYS` | Look-back window for previously heard tracks (default `30`, range 1–3650) |
 
 Never commit `.env` files or real credentials.
-
-## Recommendation behavior
-
-The eight seeded moods have documented product-default valence/energy coordinates in `backend/src/lib/recommendationEngine.js`. These coordinates are tunable examples, not psychological or clinical classifications.
-
-The recommendation API:
-
-1. Loads the authenticated user's distinct listening-history track IDs from the configured recent-history window.
-2. Builds an ephemeral Bloom Filter from those IDs.
-3. Uses the filter to identify possible history matches.
-4. Verifies every Bloom-positive candidate against MySQL, so a Bloom false positive cannot wrongly exclude an unheard track.
-5. Scores eligible tracks that have valid valence, energy, and a non-empty audio URL.
-6. Persists the ranked batch transactionally in the existing `recommendation` table.
-
-Endpoint: `POST /api/recommendations/generate` (JWT required).
-
-Example body:
-
-```json
-{ "mood_id": 1, "limit": 20 }
-```
-
-The mood must have a configured target. The limit must be an integer from 1 to 50.
 
 ## Tests and builds
 
