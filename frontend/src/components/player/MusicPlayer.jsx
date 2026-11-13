@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Box, Typography, IconButton, Stack, Tooltip, Alert, Chip } from '@mui/material'
 import SkipNextRoundedIcon from '@mui/icons-material/SkipNextRounded'
 import SkipPreviousRoundedIcon from '@mui/icons-material/SkipPreviousRounded'
@@ -8,24 +8,192 @@ import MusicNoteIcon from '@mui/icons-material/MusicNote'
 import PauseRoundedIcon from '@mui/icons-material/PauseRounded'
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded'
 import { usePlayer } from '../../context/PlayerContext'
+import { useAuth } from '../../context/AuthContext'
+import trackService from '../../services/trackService'
+
+let youtubeApiPromise = null
+
+function loadYouTubeIframeApi() {
+  if (window.YT?.Player) return Promise.resolve(window.YT)
+
+  if (!youtubeApiPromise) {
+    youtubeApiPromise = new Promise((resolve, reject) => {
+      const previousReadyCallback = window.onYouTubeIframeAPIReady
+      window.onYouTubeIframeAPIReady = () => {
+        if (typeof previousReadyCallback === 'function') {
+          try { previousReadyCallback() } catch (error) { console.warn('Existing YouTube callback failed:', error) }
+        }
+        resolve(window.YT)
+      }
+
+      let script = document.querySelector('script[src="https://www.youtube.com/iframe_api"]')
+      if (!script) {
+        script = document.createElement('script')
+        script.src = 'https://www.youtube.com/iframe_api'
+        script.async = true
+        script.onerror = () => {
+          youtubeApiPromise = null
+          reject(new Error('Could not load the YouTube player API.'))
+        }
+        document.head.appendChild(script)
+      }
+    })
+  }
+
+  return youtubeApiPromise
+}
 
 export default function MusicPlayer() {
-  const { currentTrack, isPlaying, togglePlay, playbackError, nextTrack, prevTrack, playerCollapsed, setPlayerCollapsed } = usePlayer()
-  const iframeRef = useRef(null)
+  const {
+    currentTrack,
+    isPlaying,
+    togglePlay,
+    playbackError,
+    setPlaybackState,
+    setPlaybackErrorMessage,
+    nextTrack,
+    prevTrack,
+    playerCollapsed,
+    setPlayerCollapsed,
+  } = usePlayer()
+  const { isAuthenticated } = useAuth()
+  const playerHostRef = useRef(null)
+  const youtubePlayerRef = useRef(null)
+  const isPlayingRef = useRef(isPlaying)
+  const isAuthenticatedRef = useRef(isAuthenticated)
 
-  const syncYouTubePlayback = useCallback(() => {
-    const playerWindow = iframeRef.current?.contentWindow
-    if (!playerWindow) return
-    playerWindow.postMessage(JSON.stringify({
-      event: 'command',
-      func: isPlaying ? 'playVideo' : 'pauseVideo',
-      args: [],
-    }), 'https://www.youtube-nocookie.com')
-  }, [isPlaying])
+  isPlayingRef.current = isPlaying
+  isAuthenticatedRef.current = isAuthenticated
 
+  // Keep the YouTube player mounted while collapsed, but move it out of view.
+  // The IFrame API provides reliable play-state events for listening-history tracking.
   useEffect(() => {
-    syncYouTubePlayback()
-  }, [syncYouTubePlayback, currentTrack?.youtube_video_id])
+    if (!currentTrack?.youtube_video_id || !playerHostRef.current) return undefined
+
+    const trackId = currentTrack.track_id
+    const videoId = currentTrack.youtube_video_id
+    let player = null
+    let progressTimer = null
+    let listenedSeconds = 0
+    let lastVideoTime = null
+    let active = true
+
+    const stopProgressTimer = () => {
+      if (progressTimer) {
+        window.clearInterval(progressTimer)
+        progressTimer = null
+      }
+      lastVideoTime = null
+    }
+
+    const flushListeningEvent = () => {
+      const durationListened = Math.floor(listenedSeconds)
+      listenedSeconds = 0
+      if (!isAuthenticatedRef.current || durationListened < 1) return
+
+      trackService.recordListen(trackId, durationListened).catch((error) => {
+        console.warn('Could not save listening history:', error.message)
+      })
+    }
+
+    const startProgressTimer = () => {
+      if (progressTimer || !player) return
+      try { lastVideoTime = player.getCurrentTime() } catch { lastVideoTime = null }
+
+      progressTimer = window.setInterval(() => {
+        if (!player) return
+        try {
+          const currentVideoTime = player.getCurrentTime()
+          if (lastVideoTime !== null) {
+            const delta = currentVideoTime - lastVideoTime
+            // Count real playback progress, not buffering time or manual seek jumps.
+            if (delta > 0 && delta <= 3) listenedSeconds += delta
+          }
+          lastVideoTime = currentVideoTime
+        } catch {
+          stopProgressTimer()
+        }
+      }, 1000)
+    }
+
+    loadYouTubeIframeApi()
+      .then((YT) => {
+        if (!active || !playerHostRef.current) return
+
+        player = new YT.Player(playerHostRef.current, {
+          width: '250',
+          height: '141',
+          videoId,
+          playerVars: {
+            autoplay: 1,
+            controls: 1,
+            rel: 0,
+            playsinline: 1,
+            origin: window.location.origin,
+          },
+          events: {
+            onReady: (event) => {
+              if (!active) return
+              player = event.target
+              youtubePlayerRef.current = player
+              if (isPlayingRef.current) player.playVideo()
+              else player.pauseVideo()
+            },
+            onStateChange: (event) => {
+              if (!active) return
+              if (event.data === YT.PlayerState.PLAYING) {
+                setPlaybackState(true)
+                startProgressTimer()
+              } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+                stopProgressTimer()
+                setPlaybackState(false)
+                flushListeningEvent()
+              } else if (event.data === YT.PlayerState.BUFFERING || event.data === YT.PlayerState.CUED) {
+                stopProgressTimer()
+              }
+            },
+            onError: () => {
+              setPlaybackState(false)
+              setPlaybackErrorMessage('YouTube could not play this video. Try another upload.')
+            },
+          },
+        })
+      })
+      .catch((error) => {
+        if (active) {
+          setPlaybackState(false)
+          setPlaybackErrorMessage(error.message)
+        }
+      })
+
+    return () => {
+      active = false
+      stopProgressTimer()
+      flushListeningEvent()
+      if (player) {
+        try { player.destroy() } catch (error) { console.warn('Could not destroy YouTube player:', error) }
+      }
+      if (youtubePlayerRef.current === player) youtubePlayerRef.current = null
+    }
+  }, [
+    currentTrack?.track_id,
+    currentTrack?.youtube_video_id,
+    setPlaybackState,
+    setPlaybackErrorMessage,
+  ])
+
+  // Drive the native YouTube player from the dock's play/pause button.
+  useEffect(() => {
+    const player = youtubePlayerRef.current
+    if (!player) return
+    try {
+      if (isPlaying) player.playVideo()
+      else player.pauseVideo()
+    } catch (error) {
+      console.warn('Could not update YouTube playback state:', error)
+    }
+  }, [isPlaying, currentTrack?.youtube_video_id])
+
   if (!currentTrack) return null
 
   return (
@@ -73,10 +241,9 @@ export default function MusicPlayer() {
         )}
         {currentTrack.youtube_video_id ? (
           <Box sx={{
-            position: playerCollapsed ? 'fixed' : 'absolute',
-            right: playerCollapsed ? 'auto' : 0,
-            left: playerCollapsed ? -10000 : 'auto',
-            top: playerCollapsed ? -10000 : 0,
+            position: 'absolute',
+            right: 0,
+            top: 0,
             width: { xs: 176, sm: 220, md: 250 },
             height: { xs: 99, sm: 124, md: 141 },
             overflow: 'hidden',
@@ -85,7 +252,11 @@ export default function MusicPlayer() {
             opacity: playerCollapsed ? 0 : 1,
             pointerEvents: playerCollapsed ? 'none' : 'auto',
           }}>
-            <iframe key={currentTrack.youtube_video_id} title={'YouTube playback: ' + currentTrack.title} ref={iframeRef} onLoad={syncYouTubePlayback} src={'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(currentTrack.youtube_video_id) + '?autoplay=1&controls=1&rel=0&playsinline=1&enablejsapi=1&origin=' + encodeURIComponent(window.location.origin)} allow="autoplay; encrypted-media; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen style={{ width: '100%', height: '100%', border: 0 }} />
+            <div
+              key={currentTrack.youtube_video_id}
+              ref={playerHostRef}
+              style={{ width: '100%', height: '100%' }}
+            />
           </Box>
         ) : !playerCollapsed && <Typography variant="caption" color="error">YouTube video unavailable</Typography>}
       </Box>
