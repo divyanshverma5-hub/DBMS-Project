@@ -9,7 +9,7 @@ Artist artwork used by the Music Mood artist catalogue. Images are served throug
 | The Beatles | [The Beatles (band).jpg](https://commons.wikimedia.org/wiki/File:The_Beatles_(band).jpg) | Metjovi | CC BY-SA 4.0 |
 | Nirvana | [Nirvana around 1992 (high quality) (cropped).jpg](https://commons.wikimedia.org/wiki/File:Nirvana_around_1992_(high_quality)_(cropped).jpg) | P.B. Rage | CC BY-SA 2.0 |
 | Sunidhi Chauhan | [Sunidhi chauhan.jpg](https://commons.wikimedia.org/wiki/File:Sunidhi_chauhan.jpg) | Panigrahiasmitku | CC BY-SA 4.0 |
-| Foo Fighters | [Foo Fighters.jpg](https://commons.wikimedia.org/wiki/File:Foo_Fighters.jpg) | Kristian Peacock | Wikimedia Commons file; verify license metadata on file page before redistribution |
+| Foo Fighters | [Foo Fighters.jpg](https://commons.wikimedia.org/wiki/File:Foo_Fighters.jpg) | Kristian Peacock | Kristian Peacocke |
 | Shreya Ghoshal | [Shreya at concert.jpg](https://commons.wikimedia.org/wiki/File:Shreya_at_concert.jpg) | Flickr uploader | CC BY-SA 2.0 |
 | Tame Impala | [Tame Impala.jpg](https://commons.wikimedia.org/wiki/File:Tame_Impala.jpg) | Michael Spencer | CC BY 2.0 |
 
