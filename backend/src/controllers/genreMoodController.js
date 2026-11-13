@@ -114,7 +114,7 @@ async function getTracksByMood(req, res, next) {
 
     const [tracks] = await pool.query(
       `SELECT t.track_id, t.title, t.track_no, t.duration_sec,
-              t.valence, t.energy, t.tempo_bpm, t.audio_url,
+              t.valence, t.energy, t.tempo_bpm, t.audio_url, t.youtube_video_id,
               tm.confidence,
               al.album_id, al.title AS album_title, al.cover_image_url,
               ar.artist_id, ar.name AS artist_name
