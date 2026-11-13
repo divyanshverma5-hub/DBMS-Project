@@ -8,7 +8,8 @@ import { usePlayer } from '../context/PlayerContext'
 
 export default function MainLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const { currentTrack } = usePlayer()
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const { currentTrack, playerCollapsed } = usePlayer()
 
   const handleMobileToggle = () => {
     setMobileOpen(!mobileOpen)
@@ -21,7 +22,7 @@ export default function MainLayout() {
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
       {/* Sidebar Navigation */}
-      <Sidebar mobileOpen={mobileOpen} onMobileClose={handleMobileClose} />
+      <Sidebar mobileOpen={mobileOpen} onMobileClose={handleMobileClose} collapsed={sidebarCollapsed} onToggleCollapsed={() => setSidebarCollapsed((value) => !value)} />
 
       {/* Main Content Area */}
       <Box
@@ -29,7 +30,7 @@ export default function MainLayout() {
           display: 'flex',
           flexDirection: 'column',
           flexGrow: 1,
-          width: { md: 'calc(100% - 240px)' },
+          width: { md: `calc(100% - ${sidebarCollapsed ? 76 : 240}px)` },
           minHeight: '100vh',
         }}
       >
@@ -42,7 +43,7 @@ export default function MainLayout() {
             py: { xs: 2.5, md: 4 },
             px: { xs: 2, sm: 3, md: 4 },
             // Add padding when music player is active to prevent content cutoff
-            pb: currentTrack ? { xs: 14, md: 16 } : 4,
+            pb: currentTrack ? (playerCollapsed ? { xs: 11, md: 12 } : { xs: 22, md: 24 }) : 4,
           }}
         >
           <Container maxWidth="xl" disableGutters>
