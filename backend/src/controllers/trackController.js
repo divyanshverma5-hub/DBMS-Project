@@ -129,7 +129,7 @@ async function getTrackById(req, res, next) {
 
     const [tracks] = await pool.query(
       `SELECT t.track_id, t.title, t.track_no, t.duration_sec,
-              t.valence, t.energy, t.tempo_bpm, t.audio_url,
+              t.valence, t.energy, t.tempo_bpm, t.audio_url, t.youtube_video_id,
               al.album_id, al.title AS album_title, al.release_date, al.cover_image_url,
               fn_play_count(t.track_id) AS play_count,
               ROUND(COALESCE((SELECT AVG(rating) FROM rating WHERE track_id = t.track_id), 0), 2) AS avg_rating,
