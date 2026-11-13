@@ -6,19 +6,21 @@ const { sendSuccess, sendError } = require('../utils/response');
  * Preserves weak entity design: calls sp_create_playlist for concurrency-safe per-user sequential numbering.
  */
 async function createPlaylist(req, res, next) {
+  let connection;
   try {
+    connection = await pool.getConnection();
     const userId = req.user.user_id;
     const { name, mood_id = null } = req.body;
 
     // Call stored procedure
     // Signature: sp_create_playlist(p_user_id, p_name, p_mood_id, OUT p_playlist_no)
-    await pool.query('CALL sp_create_playlist(?, ?, ?, @p_playlist_no)', [
+    await connection.query('CALL sp_create_playlist(?, ?, ?, @p_playlist_no)', [
       userId,
       name,
       mood_id || null,
     ]);
 
-    const [[{ p_playlist_no }]] = await pool.query('SELECT @p_playlist_no AS p_playlist_no');
+    const [[{ p_playlist_no }]] = await connection.query('SELECT @p_playlist_no AS p_playlist_no');
 
     return sendSuccess(
       res,
@@ -33,6 +35,8 @@ async function createPlaylist(req, res, next) {
     );
   } catch (err) {
     next(err);
+  } finally {
+    if (connection) connection.release();
   }
 }
 
@@ -90,9 +94,9 @@ async function getPlaylistById(req, res, next) {
     // Fetch ordered tracks in playlist
     const [tracks] = await pool.query(
       `SELECT pt.position, pt.added_at,
-              t.track_id, t.title, t.duration_sec, t.valence, t.energy, t.audio_url,
+              t.track_id, t.title, t.duration_sec, t.valence, t.energy, t.audio_url, t.youtube_video_id,
               al.album_id, al.title AS album_title, al.cover_image_url,
-              ar.artist_id, ar.name AS artist_name
+              ar.artist_id, ar.name AS artist_name, ar.image_url AS artist_image_url
        FROM playlist_track pt
        INNER JOIN track t ON pt.track_id = t.track_id
        INNER JOIN album al ON t.album_id = al.album_id
@@ -179,6 +183,7 @@ async function deletePlaylist(req, res, next) {
  * Uses concurrency-safe sp_add_track_to_playlist
  */
 async function addTrackToPlaylist(req, res, next) {
+  let connection;
   try {
     const userId = req.user.user_id;
     const playlistNo = parseInt(req.params.playlistNo, 10);
@@ -196,13 +201,14 @@ async function addTrackToPlaylist(req, res, next) {
 
     // Call stored procedure sp_add_track_to_playlist
     // Signature: (user_id, playlist_no, track_id, OUT p_position)
-    await pool.query('CALL sp_add_track_to_playlist(?, ?, ?, @out_pos)', [
+    connection = await pool.getConnection();
+    await connection.query('CALL sp_add_track_to_playlist(?, ?, ?, @out_pos)', [
       userId,
       playlistNo,
       track_id,
     ]);
 
-    const [[{ out_pos }]] = await pool.query('SELECT @out_pos AS out_pos');
+    const [[{ out_pos }]] = await connection.query('SELECT @out_pos AS out_pos');
 
     return sendSuccess(
       res,
@@ -217,6 +223,8 @@ async function addTrackToPlaylist(req, res, next) {
     );
   } catch (err) {
     next(err);
+  } finally {
+    if (connection) connection.release();
   }
 }
 

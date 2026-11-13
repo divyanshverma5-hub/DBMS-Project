@@ -133,9 +133,7 @@ async function getTrackById(req, res, next) {
       `SELECT t.track_id, t.title, t.track_no, t.duration_sec,
               t.valence, t.energy, t.tempo_bpm, t.youtube_video_id,
               al.album_id, al.title AS album_title, al.release_date, al.cover_image_url,
-              fn_play_count(t.track_id) AS play_count,
-              ROUND(COALESCE((SELECT AVG(rating) FROM rating WHERE track_id = t.track_id), 0), 2) AS avg_rating,
-              (SELECT COUNT(*) FROM rating WHERE track_id = t.track_id) AS total_ratings
+              fn_play_count(t.track_id) AS play_count
        FROM track t
        INNER JOIN album al ON t.album_id = al.album_id
        WHERE t.track_id = ?`,
