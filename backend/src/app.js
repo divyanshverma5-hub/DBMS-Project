@@ -10,9 +10,7 @@ const tracksRouter = require('./routes/tracks');
 const genresRouter = require('./routes/genres');
 const moodsRouter = require('./routes/moods');
 const listeningHistoryRouter = require('./routes/listeningHistory');
-const ratingsRouter = require('./routes/ratings');
 const playlistsRouter = require('./routes/playlists');
-const recommendationsRouter = require('./routes/recommendations');
 
 const app = express();
 
@@ -32,9 +30,7 @@ app.use('/api/tracks', tracksRouter);
 app.use('/api/genres', genresRouter);
 app.use('/api/moods', moodsRouter);
 app.use('/api/listening-history', listeningHistoryRouter);
-app.use('/api/ratings', ratingsRouter);
 app.use('/api/playlists', playlistsRouter);
-app.use('/api/recommendations', recommendationsRouter);
 
 app.use((req, res) => {
   res.status(404).json({
