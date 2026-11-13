@@ -76,7 +76,7 @@ export default function PlaylistDetailPage() {
 
   const handlePlayAll = () => {
     if (playlist?.tracks && playlist.tracks.length > 0) {
-      const firstPlayable = playlist.tracks.find((t) => t.audio_url) || playlist.tracks[0]
+      const firstPlayable = playlist.tracks.find((t) => t.youtube_video_id) || playlist.tracks[0]
       playTrack(firstPlayable, playlist.tracks)
     }
   }
