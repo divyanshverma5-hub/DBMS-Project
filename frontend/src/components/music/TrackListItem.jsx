@@ -4,7 +4,6 @@ import {
   Typography,
   IconButton,
   Chip,
-  Rating,
   Tooltip,
   Paper,
 } from '@mui/material'
@@ -12,8 +11,6 @@ import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded'
 import PlaylistAddRoundedIcon from '@mui/icons-material/PlaylistAddRounded'
 import MusicNoteIcon from '@mui/icons-material/MusicNote'
 import { usePlayer } from '../../context/PlayerContext'
-import { useAuth } from '../../context/AuthContext'
-import ratingService from '../../services/ratingService'
 import { formatDuration } from '../../utils/formatters'
 import AddToPlaylistDialog from './AddToPlaylistDialog'
 
@@ -22,13 +19,9 @@ export default function TrackListItem({
   index = null,
   playlistContext = null,
   showAlbum = true,
-  onRatingUpdated = null,
 }) {
   const { currentTrack, isPlaying, playTrack } = usePlayer()
-  const { isAuthenticated } = useAuth()
   const [playlistDialogOpen, setPlaylistDialogOpen] = useState(false)
-  const [userRating, setUserRating] = useState(track.user_rating || null)
-  const [ratingLoading, setRatingLoading] = useState(false)
 
   const isCurrentTrack = currentTrack?.track_id === track.track_id
   const isCurrentlyPlaying = isCurrentTrack && isPlaying
@@ -36,20 +29,6 @@ export default function TrackListItem({
 
   const handlePlayClick = () => {
     if (!isCurrentTrack) playTrack(track, playlistContext)
-  }
-
-  const handleRatingChange = async (_, newRating) => {
-    if (!isAuthenticated || !newRating) return
-    setRatingLoading(true)
-    try {
-      await ratingService.rateTrack(track.track_id, newRating)
-      setUserRating(newRating)
-      if (onRatingUpdated) onRatingUpdated(track.track_id, newRating)
-    } catch (err) {
-      console.warn('Rating submission error:', err.message)
-    } finally {
-      setRatingLoading(false)
-    }
   }
 
   return (
@@ -170,22 +149,8 @@ export default function TrackListItem({
           )}
         </Box>
 
-        {/* Right: Duration + Rating + Add to Playlist */}
+        {/* Right: Duration + Add to Playlist */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
-          {isAuthenticated && (
-            <Tooltip title={userRating ? `Your Rating: ${userRating} stars` : 'Rate this song'}>
-              <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
-                <Rating
-                  size="small"
-                  value={userRating || (track.avg_rating ? Math.round(track.avg_rating) : 0)}
-                  disabled={ratingLoading}
-                  onChange={handleRatingChange}
-                  sx={{ fontSize: '1rem', color: '#f59e0b' }}
-                />
-              </Box>
-            </Tooltip>
-          )}
-
           <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ minWidth: 36, textAlign: 'right' }}>
             {formatDuration(track.duration_sec)}
           </Typography>
