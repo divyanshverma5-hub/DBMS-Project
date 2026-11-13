@@ -34,9 +34,9 @@ A full-stack **Music Mood Player** built as a DBMS final project. Browse a music
 
 ### 1. Configure MySQL
 
-Create the database and run the schema, procedures, triggers, views, seed scripts, and real-music catalogue migration in the order documented in `database/00_run_all.sql`. In MySQL Workbench, run `database/15_real_music_catalogue.sql` manually after the normal setup scripts if you are not using the CLI runner. Then run `database/16_artist_images.sql` to add artist artwork.
+For a fresh setup, use the MySQL CLI runner `database/00_run_all.sql`. In MySQL Workbench, execute the numbered scripts individually in the order listed in that file. The runner applies the real-music catalogue and artist-image scripts after the demo seed and DBMS verification suite.
 
-**Important:** `database/04_sample_data.sql` truncates and repopulates the project tables. Do not run it against data you need to keep. `database/00_reset_database_dev_only.sql` is destructive and intended only for a clean development reset. The master setup runner executes `database/15_real_music_catalogue.sql` after the sample-data tests to replace fictional artists/tracks with the requested catalogue. This migration deletes track-dependent demo listening history, ratings, playlist entries, and recommendations; it preserves user accounts, playlist records, follows, mood logs, and the mood taxonomy. Do not rerun `04_sample_data.sql` after applying the real catalogue migration. Artist image sources and license attributions are listed in `documentation/artist-image-credits.md`.
+**Important:** `database/04_sample_data.sql` truncates and repopulates the project tables. Do not run it against data you need to keep. `database/00_reset_database_dev_only.sql` is destructive and intended only for a clean development reset. The master setup runner executes `database/15_real_music_catalogue.sql` after the sample-data tests to replace fictional artists/tracks with the selected catalogue. This migration deletes track-dependent demo listening history and playlist entries; it preserves user accounts, playlist records, follows, mood logs, and the mood taxonomy. Do not rerun `04_sample_data.sql` after applying the real catalogue migration. Artist image sources and license attributions are listed in `documentation/artist-image-credits.md`.
 
 For a local development database:
 
@@ -118,7 +118,7 @@ A live API/database integration check requires a running MySQL server, the schem
 
 ## Database overview
 
-The relational model contains 19 tables covering user specialization, music catalogue, moods, track relationships, user activity, playlists, and recommendations. The project includes ER-to-relational mapping, normalization documentation, stored procedures, triggers, views, indexes, and sample analytical queries.
+The relational model contains 17 tables covering user specialization, music catalogue, moods, track relationships, user activity, and playlists. The SQL suite includes 18 analytical queries plus stored functions, procedures, triggers, views, transactions, indexes, and role-based access control. The project includes ER-to-relational mapping, normalization documentation, stored procedures, triggers, views, indexes, and sample analytical queries.
 
 ## Documentation
 
