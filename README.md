@@ -34,9 +34,9 @@ A full-stack **Music Mood Recommendation System** built as a DBMS final project.
 
 ### 1. Configure MySQL
 
-Create the database and run the schema, procedures, triggers, views, and seed scripts in the order documented in `database/00_run_all.sql`.
+Create the database and run the schema, procedures, triggers, views, seed scripts, and real-music catalogue migration in the order documented in `database/00_run_all.sql`. In MySQL Workbench, run `database/15_real_music_catalogue.sql` manually after the normal setup scripts if you are not using the CLI runner.
 
-**Important:** `database/04_sample_data.sql` truncates and repopulates the project tables. Do not run it against data you need to keep. `database/00_reset_database_dev_only.sql` is destructive and intended only for a clean development reset.
+**Important:** `database/04_sample_data.sql` truncates and repopulates the project tables. Do not run it against data you need to keep. `database/00_reset_database_dev_only.sql` is destructive and intended only for a clean development reset. The master setup runner executes `database/15_real_music_catalogue.sql` after the sample-data tests to replace fictional artists/tracks with the requested catalogue. This migration deletes track-dependent demo listening history, ratings, playlist entries, and recommendations; it preserves user accounts, playlist records, follows, mood logs, and the mood taxonomy. Do not rerun `04_sample_data.sql` after applying the real catalogue migration.
 
 For a local development database:
 

@@ -70,6 +70,10 @@ SOURCE 12_optimization.sql;
 -- Step 13: Run Automated Verification Test Suite (PASS/FAIL Assertions)
 SOURCE 13_test_cases.sql;
 
+-- Step 14: Replace fictional sample music with the requested real-artist catalogue.
+-- This clears track-dependent demo activity; see the migration header before running.
+SOURCE 15_real_music_catalogue.sql;
+
 SELECT '======================================================' AS Status;
 SELECT 'COMPLETE MUSIC MOOD DATABASE SUITE DEPLOYED & TESTED!' AS Status;
 SELECT '======================================================' AS Status;
