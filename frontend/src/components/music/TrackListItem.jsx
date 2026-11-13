@@ -33,7 +33,7 @@ export default function TrackListItem({
 
   const isCurrentTrack = currentTrack?.track_id === track.track_id
   const isCurrentlyPlaying = isCurrentTrack && isPlaying
-  const hasAudioUrl = Boolean(track.audio_url && track.audio_url.trim())
+  const hasAudioUrl = Boolean((track.audio_url && track.audio_url.trim()) || track.youtube_video_id)
 
   const handlePlayClick = () => {
     if (isCurrentTrack) {
