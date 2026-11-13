@@ -33,10 +33,12 @@ const registerRules = [
     .isIn(['free', 'premium'])
     .withMessage('Account type must be either free or premium'),
   body('plan_type')
-    // A plan is required and validated only for premium registrations.
-    // Free registrations should omit this field entirely.
-    .if((value, { req }) => req.body.account_type === 'premium')
-    .isIn(['basic', 'standard', 'family'])
+    // Free is the default account type, so it must never require a subscription plan.
+    // Only premium registrations must provide one of the supported plan types.
+    .custom((value, { req }) => {
+      const accountType = String(req.body.account_type || 'free').trim().toLowerCase();
+      return accountType !== 'premium' || ['basic', 'standard', 'family'].includes(value);
+    })
     .withMessage('Plan type must be basic, standard, or family for premium accounts'),
 ];
 
