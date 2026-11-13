@@ -7,6 +7,8 @@ import KeyboardArrowUpRoundedIcon from '@mui/icons-material/KeyboardArrowUpRound
 import MusicNoteIcon from '@mui/icons-material/MusicNote'
 import PauseRoundedIcon from '@mui/icons-material/PauseRounded'
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded'
+import PauseRoundedIcon from '@mui/icons-material/PauseRounded'
+import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded'
 import { usePlayer } from '../../context/PlayerContext'
 
 export default function MusicPlayer() {
