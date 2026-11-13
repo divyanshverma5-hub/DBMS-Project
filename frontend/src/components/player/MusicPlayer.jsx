@@ -1,14 +1,31 @@
-import React from 'react'
+import React, { useEffect, useRef, useCallback } from 'react'
 import { Box, Typography, IconButton, Stack, Tooltip, Alert, Chip } from '@mui/material'
 import SkipNextRoundedIcon from '@mui/icons-material/SkipNextRounded'
 import SkipPreviousRoundedIcon from '@mui/icons-material/SkipPreviousRounded'
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded'
 import KeyboardArrowUpRoundedIcon from '@mui/icons-material/KeyboardArrowUpRounded'
 import MusicNoteIcon from '@mui/icons-material/MusicNote'
+import PauseRoundedIcon from '@mui/icons-material/PauseRounded'
+import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded'
 import { usePlayer } from '../../context/PlayerContext'
 
 export default function MusicPlayer() {
-  const { currentTrack, playbackError, nextTrack, prevTrack, playerCollapsed, setPlayerCollapsed } = usePlayer()
+  const { currentTrack, isPlaying, togglePlay, playbackError, nextTrack, prevTrack, playerCollapsed, setPlayerCollapsed } = usePlayer()
+  const iframeRef = useRef(null)
+
+  const syncYouTubePlayback = useCallback(() => {
+    const playerWindow = iframeRef.current?.contentWindow
+    if (!playerWindow) return
+    playerWindow.postMessage(JSON.stringify({
+      event: 'command',
+      func: isPlaying ? 'playVideo' : 'pauseVideo',
+      args: [],
+    }), 'https://www.youtube-nocookie.com')
+  }, [isPlaying])
+
+  useEffect(() => {
+    syncYouTubePlayback()
+  }, [syncYouTubePlayback, currentTrack?.youtube_video_id])
   if (!currentTrack) return null
 
   return (
@@ -30,6 +47,7 @@ export default function MusicPlayer() {
               <Typography variant="caption" color="text.secondary" noWrap>{currentTrack.artist_name || 'Unknown Artist'} · YouTube playback</Typography>
             </Box>
             <Stack direction="row" spacing={0.5}>
+              <Tooltip title={isPlaying ? 'Pause' : 'Resume'}><IconButton size="small" onClick={togglePlay} aria-label={isPlaying ? 'Pause playback' : 'Resume playback'}>{isPlaying ? <PauseRoundedIcon /> : <PlayArrowRoundedIcon />}</IconButton></Tooltip>
               <Tooltip title="Previous track"><IconButton size="small" onClick={prevTrack}><SkipPreviousRoundedIcon /></IconButton></Tooltip>
               <Tooltip title="Next track"><IconButton size="small" onClick={nextTrack}><SkipNextRoundedIcon /></IconButton></Tooltip>
             </Stack>
@@ -47,12 +65,13 @@ export default function MusicPlayer() {
               </Box>
             </Box>
             <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
+              <Tooltip title={isPlaying ? 'Pause' : 'Resume'}><IconButton size="small" onClick={togglePlay} aria-label={isPlaying ? 'Pause playback' : 'Resume playback'}>{isPlaying ? <PauseRoundedIcon /> : <PlayArrowRoundedIcon />}</IconButton></Tooltip>
               <Tooltip title="Previous track"><IconButton size="small" onClick={prevTrack}><SkipPreviousRoundedIcon /></IconButton></Tooltip>
               <Tooltip title="Next track"><IconButton size="small" onClick={nextTrack}><SkipNextRoundedIcon /></IconButton></Tooltip>
             </Stack>
             {currentTrack.youtube_video_id ? (
               <Box sx={{ width: { xs: 176, sm: 220, md: 250 }, flexShrink: 0, aspectRatio: '16 / 9', overflow: 'hidden', borderRadius: 2, bgcolor: '#0f172a' }}>
-                <iframe key={currentTrack.youtube_video_id} title={'YouTube playback: ' + currentTrack.title} src={'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(currentTrack.youtube_video_id) + '?autoplay=1&controls=1&rel=0&playsinline=1'} allow="autoplay; encrypted-media; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen style={{ width: '100%', height: '100%', border: 0 }} />
+                <iframe key={currentTrack.youtube_video_id} title={'YouTube playback: ' + currentTrack.title} ref={iframeRef} onLoad={syncYouTubePlayback} src={'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(currentTrack.youtube_video_id) + '?autoplay=1&controls=1&rel=0&playsinline=1&enablejsapi=1&origin=' + encodeURIComponent(window.location.origin)} allow="autoplay; encrypted-media; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen style={{ width: '100%', height: '100%', border: 0 }} />
               </Box>
             ) : <Typography variant="caption" color="error">YouTube video unavailable</Typography>}
           </Box>
