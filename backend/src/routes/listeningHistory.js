@@ -3,10 +3,11 @@ const router = express.Router();
 const activityController = require('../controllers/activityController');
 const { authenticateToken } = require('../middleware/auth');
 const { validateRequest } = require('../middleware/validate');
-const { recordListenRules, logMoodRules } = require('../validators');
+const { recordListenRules, updateListenRules, logMoodRules } = require('../validators');
 
 // Listening history
 router.post('/listen', authenticateToken, recordListenRules, validateRequest, activityController.recordListeningEvent);
+router.put('/listen/:listenId', authenticateToken, updateListenRules, validateRequest, activityController.updateListeningEvent);
 router.get('/history', authenticateToken, activityController.getUserListeningHistory);
 router.get('/tracks/:id/summary', activityController.getTrackHistorySummary);
 
