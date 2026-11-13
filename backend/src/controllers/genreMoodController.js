@@ -32,7 +32,7 @@ async function getTracksByGenre(req, res, next) {
       `SELECT t.track_id, t.title, t.track_no, t.duration_sec,
               t.valence, t.energy, t.tempo_bpm, t.audio_url, t.youtube_video_id,
               al.album_id, al.title AS album_title, al.cover_image_url,
-              ar.artist_id, ar.name AS artist_name
+              ar.artist_id, ar.name AS artist_name, ar.image_url AS artist_image_url
        FROM track t
        INNER JOIN track_genre tg ON t.track_id = tg.track_id
        INNER JOIN album al ON t.album_id = al.album_id
@@ -117,7 +117,7 @@ async function getTracksByMood(req, res, next) {
               t.valence, t.energy, t.tempo_bpm, t.audio_url, t.youtube_video_id,
               tm.confidence,
               al.album_id, al.title AS album_title, al.cover_image_url,
-              ar.artist_id, ar.name AS artist_name
+              ar.artist_id, ar.name AS artist_name, ar.image_url AS artist_image_url
        FROM track t
        INNER JOIN track_mood tm ON t.track_id = tm.track_id
        INNER JOIN album al ON t.album_id = al.album_id

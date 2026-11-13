@@ -121,10 +121,10 @@ export default function TrackListItem({
               flexShrink: 0,
             }}
           >
-            {track.cover_image_url ? (
+            {(track.cover_image_url || track.artist_image_url) ? (
               <img
-                src={track.cover_image_url}
-                alt={track.title}
+                src={track.cover_image_url || track.artist_image_url}
+                alt={track.artist_name ? `${track.artist_name} photo` : track.title}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
             ) : (

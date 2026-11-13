@@ -1,14 +1,31 @@
-import React from 'react'
+import React, { useEffect, useRef, useCallback } from 'react'
 import { Box, Typography, IconButton, Stack, Tooltip, Alert, Chip } from '@mui/material'
 import SkipNextRoundedIcon from '@mui/icons-material/SkipNextRounded'
 import SkipPreviousRoundedIcon from '@mui/icons-material/SkipPreviousRounded'
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded'
 import KeyboardArrowUpRoundedIcon from '@mui/icons-material/KeyboardArrowUpRounded'
 import MusicNoteIcon from '@mui/icons-material/MusicNote'
+import PauseRoundedIcon from '@mui/icons-material/PauseRounded'
+import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded'
 import { usePlayer } from '../../context/PlayerContext'
 
 export default function MusicPlayer() {
-  const { currentTrack, playbackError, nextTrack, prevTrack, playerCollapsed, setPlayerCollapsed } = usePlayer()
+  const { currentTrack, isPlaying, togglePlay, playbackError, nextTrack, prevTrack, playerCollapsed, setPlayerCollapsed } = usePlayer()
+  const iframeRef = useRef(null)
+
+  const syncYouTubePlayback = useCallback(() => {
+    const playerWindow = iframeRef.current?.contentWindow
+    if (!playerWindow) return
+    playerWindow.postMessage(JSON.stringify({
+      event: 'command',
+      func: isPlaying ? 'playVideo' : 'pauseVideo',
+      args: [],
+    }), 'https://www.youtube-nocookie.com')
+  }, [isPlaying])
+
+  useEffect(() => {
+    syncYouTubePlayback()
+  }, [syncYouTubePlayback, currentTrack?.youtube_video_id])
   if (!currentTrack) return null
 
   return (
@@ -23,13 +40,14 @@ export default function MusicPlayer() {
         {playerCollapsed ? (
           <Box sx={{ minHeight: 52, display: 'flex', alignItems: 'center', gap: 1.5, pr: 5 }}>
             <Box sx={{ width: 40, height: 40, borderRadius: 2, overflow: 'hidden', flexShrink: 0, bgcolor: '#f1f5f9', display: 'grid', placeItems: 'center' }}>
-              {currentTrack.cover_image_url ? <img src={currentTrack.cover_image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <MusicNoteIcon sx={{ color: '#94a3b8' }} />}
+              {(currentTrack.cover_image_url || currentTrack.artist_image_url) ? <img src={currentTrack.cover_image_url || currentTrack.artist_image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <MusicNoteIcon sx={{ color: '#94a3b8' }} />}
             </Box>
             <Box sx={{ minWidth: 0, flexGrow: 1 }}>
               <Typography variant="subtitle2" fontWeight={700} noWrap>{currentTrack.title}</Typography>
               <Typography variant="caption" color="text.secondary" noWrap>{currentTrack.artist_name || 'Unknown Artist'} · YouTube playback</Typography>
             </Box>
             <Stack direction="row" spacing={0.5}>
+              <Tooltip title={isPlaying ? 'Pause' : 'Resume'}><IconButton size="small" onClick={togglePlay} aria-label={isPlaying ? 'Pause playback' : 'Resume playback'}>{isPlaying ? <PauseRoundedIcon /> : <PlayArrowRoundedIcon />}</IconButton></Tooltip>
               <Tooltip title="Previous track"><IconButton size="small" onClick={prevTrack}><SkipPreviousRoundedIcon /></IconButton></Tooltip>
               <Tooltip title="Next track"><IconButton size="small" onClick={nextTrack}><SkipNextRoundedIcon /></IconButton></Tooltip>
             </Stack>
@@ -38,7 +56,7 @@ export default function MusicPlayer() {
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, minHeight: 142, pr: 5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0, flex: '1 1 0', gap: 1.5 }}>
               <Box sx={{ width: 44, height: 44, borderRadius: 2, overflow: 'hidden', flexShrink: 0, bgcolor: '#f1f5f9', display: 'grid', placeItems: 'center' }}>
-                {currentTrack.cover_image_url ? <img src={currentTrack.cover_image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <MusicNoteIcon sx={{ color: '#94a3b8' }} />}
+                {(currentTrack.cover_image_url || currentTrack.artist_image_url) ? <img src={currentTrack.cover_image_url || currentTrack.artist_image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <MusicNoteIcon sx={{ color: '#94a3b8' }} />}
               </Box>
               <Box sx={{ minWidth: 0 }}>
                 <Typography variant="subtitle2" fontWeight={700} noWrap>{currentTrack.title}</Typography>
@@ -47,16 +65,29 @@ export default function MusicPlayer() {
               </Box>
             </Box>
             <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
+              <Tooltip title={isPlaying ? 'Pause' : 'Resume'}><IconButton size="small" onClick={togglePlay} aria-label={isPlaying ? 'Pause playback' : 'Resume playback'}>{isPlaying ? <PauseRoundedIcon /> : <PlayArrowRoundedIcon />}</IconButton></Tooltip>
               <Tooltip title="Previous track"><IconButton size="small" onClick={prevTrack}><SkipPreviousRoundedIcon /></IconButton></Tooltip>
               <Tooltip title="Next track"><IconButton size="small" onClick={nextTrack}><SkipNextRoundedIcon /></IconButton></Tooltip>
             </Stack>
-            {currentTrack.youtube_video_id ? (
-              <Box sx={{ width: { xs: 176, sm: 220, md: 250 }, flexShrink: 0, aspectRatio: '16 / 9', overflow: 'hidden', borderRadius: 2, bgcolor: '#0f172a' }}>
-                <iframe key={currentTrack.youtube_video_id} title={'YouTube playback: ' + currentTrack.title} src={'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(currentTrack.youtube_video_id) + '?autoplay=1&controls=1&rel=0&playsinline=1'} allow="autoplay; encrypted-media; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen style={{ width: '100%', height: '100%', border: 0 }} />
-              </Box>
-            ) : <Typography variant="caption" color="error">YouTube video unavailable</Typography>}
           </Box>
         )}
+        {currentTrack.youtube_video_id ? (
+          <Box sx={{
+            position: playerCollapsed ? 'fixed' : 'absolute',
+            right: playerCollapsed ? 'auto' : 0,
+            left: playerCollapsed ? -10000 : 'auto',
+            top: playerCollapsed ? -10000 : 0,
+            width: { xs: 176, sm: 220, md: 250 },
+            height: { xs: 99, sm: 124, md: 141 },
+            overflow: 'hidden',
+            borderRadius: 2,
+            bgcolor: '#0f172a',
+            opacity: playerCollapsed ? 0 : 1,
+            pointerEvents: playerCollapsed ? 'none' : 'auto',
+          }}>
+            <iframe key={currentTrack.youtube_video_id} title={'YouTube playback: ' + currentTrack.title} ref={iframeRef} onLoad={syncYouTubePlayback} src={'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(currentTrack.youtube_video_id) + '?autoplay=1&controls=1&rel=0&playsinline=1&enablejsapi=1&origin=' + encodeURIComponent(window.location.origin)} allow="autoplay; encrypted-media; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen style={{ width: '100%', height: '100%', border: 0 }} />
+          </Box>
+        ) : !playerCollapsed && <Typography variant="caption" color="error">YouTube video unavailable</Typography>}
       </Box>
     </Box>
   )

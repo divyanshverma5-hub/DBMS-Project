@@ -46,7 +46,7 @@ export default function AlbumDetailPage() {
   const handlePlayAll = () => {
     if (album?.tracks && album.tracks.length > 0) {
       // Find first playable track
-      const firstPlayable = album.tracks.find((t) => t.audio_url) || album.tracks[0]
+      const firstPlayable = album.tracks.find((t) => t.youtube_video_id) || album.tracks[0]
       playTrack(firstPlayable, album.tracks)
     }
   }
@@ -106,9 +106,9 @@ export default function AlbumDetailPage() {
             boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
           }}
         >
-          {album.cover_image_url ? (
+          {(album.cover_image_url || album.artist_image_url) ? (
             <img
-              src={album.cover_image_url}
+              src={album.cover_image_url || album.artist_image_url}
               alt={album.title}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
@@ -170,6 +170,7 @@ export default function AlbumDetailPage() {
                   ...track,
                   album_title: album.title,
                   cover_image_url: album.cover_image_url,
+                  artist_image_url: album.artist_image_url,
                   artist_name: album.artist_name,
                 }}
                 index={i}
@@ -178,6 +179,7 @@ export default function AlbumDetailPage() {
                   ...t,
                   album_title: album.title,
                   cover_image_url: album.cover_image_url,
+                  artist_image_url: album.artist_image_url,
                   artist_name: album.artist_name,
                 }))}
               />
