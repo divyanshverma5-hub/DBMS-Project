@@ -113,6 +113,7 @@ CREATE TABLE IF NOT EXISTS track (
     energy       FLOAT             NULL,
     tempo_bpm    SMALLINT UNSIGNED NULL,
     audio_url    VARCHAR(500)      NULL,
+    youtube_video_id VARCHAR(20)   NULL,
     CONSTRAINT pk_track PRIMARY KEY (track_id),
     CONSTRAINT uk_track_album_track_no UNIQUE (album_id, track_no),
     CONSTRAINT fk_track_album FOREIGN KEY (album_id)
