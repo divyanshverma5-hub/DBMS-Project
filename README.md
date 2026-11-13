@@ -36,7 +36,7 @@ A full-stack **Music Mood Recommendation System** built as a DBMS final project.
 
 Create the database and run the schema, procedures, triggers, views, and seed scripts in the order documented in `database/00_run_all.sql`.
 
-**Important:** `database/04_sample_data.sql` truncates and repopulates the project tables. Do not run it against data you need to keep. `database/00_reset_database_dev_only.sql` is destructive and intended only for a clean development reset.
+**Important:** `database/04_sample_data.sql` truncates and repopulates the project tables. Do not run it against data you need to keep. `database/00_reset_database_dev_only.sql` is destructive and intended only for a clean development reset. After the YouTube catalogue migration (`database/14_youtube_catalogue_expansion.sql`), do not rerun `04_sample_data.sql`: it resets the catalogue and restores the fictional demo artists and tracks.
 
 For a local development database:
 
