@@ -100,12 +100,12 @@ async function getArtistTracks(req, res, next) {
 
     const [tracks] = await pool.query(
       `SELECT t.track_id, t.title, t.track_no, t.duration_sec, t.valence, t.energy,
-              t.tempo_bpm, t.audio_url, t.youtube_video_id, ta.role AS artist_role,
+              t.tempo_bpm, t.youtube_video_id, ta.role AS artist_role,
               al.album_id, al.title AS album_title, al.cover_image_url
        FROM track t
        INNER JOIN track_artist ta ON t.track_id = ta.track_id
        INNER JOIN album al ON t.album_id = al.album_id
-       WHERE ta.artist_id = ?
+       WHERE ta.artist_id = ? AND t.youtube_video_id IS NOT NULL
        ORDER BY al.release_date DESC, t.track_no ASC`,
       [artistId]
     );
