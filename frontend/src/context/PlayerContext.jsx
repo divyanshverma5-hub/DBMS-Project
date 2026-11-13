@@ -41,6 +41,12 @@ export function PlayerProvider({ children }) {
   const togglePlay = useCallback(() => {
     setIsPlaying((playing) => !playing)
   }, [])
+  const setPlaybackState = useCallback((playing) => {
+    setIsPlaying(Boolean(playing))
+  }, [])
+  const setPlaybackErrorMessage = useCallback((message) => {
+    setPlaybackError(message || null)
+  }, [])
   const seek = useCallback(() => {}, [])
   const setVolume = useCallback(() => {}, [])
   const toggleMute = useCallback(() => {}, [])
@@ -75,6 +81,8 @@ export function PlayerProvider({ children }) {
     queue,
     queueIndex,
     playbackError,
+    setPlaybackState,
+    setPlaybackErrorMessage,
     playerCollapsed,
     setPlayerCollapsed,
     playTrack,
