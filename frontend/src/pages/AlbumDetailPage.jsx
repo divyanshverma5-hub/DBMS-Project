@@ -179,6 +179,7 @@ export default function AlbumDetailPage() {
                   ...t,
                   album_title: album.title,
                   cover_image_url: album.cover_image_url,
+                  artist_image_url: album.artist_image_url,
                   artist_name: album.artist_name,
                 }))}
               />
