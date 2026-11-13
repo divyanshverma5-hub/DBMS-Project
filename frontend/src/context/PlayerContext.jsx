@@ -80,11 +80,13 @@ export function PlayerProvider({ children }) {
     }
 
     const handlePlay = () => {
+      if (activeTrackRef.current?.youtube_video_id) return
       setIsPlaying(true)
       lastTimeRef.current = audio.currentTime
     }
 
     const handlePause = () => {
+      if (activeTrackRef.current?.youtube_video_id) return
       setIsPlaying(false)
     }
 
@@ -149,6 +151,18 @@ export function PlayerProvider({ children }) {
     setPlaybackError(null)
 
     const audio = audioRef.current
+    if (track.youtube_video_id) {
+      // YouTube tracks are played by the embedded player in MusicPlayer.
+      // Stop any previous HTML audio stream and let the iframe handle playback.
+      audio.pause()
+      audio.removeAttribute('src')
+      audio.load()
+      setCurrentTime(0)
+      setDuration(track.duration_sec || 0)
+      setIsPlaying(true)
+      return
+    }
+
     if (!track.audio_url || !track.audio_url.trim()) {
       audio.pause()
       audio.removeAttribute('src')
