@@ -159,9 +159,9 @@ export default function ArtistDetailPage() {
               {tracks.map((track, idx) => (
                 <TrackListItem
                   key={track.track_id}
-                  track={track}
+                  track={{ ...track, artist_image_url: artist.image_url }}
                   index={idx}
-                  playlistContext={tracks}
+                  playlistContext={tracks.map((item) => ({ ...item, artist_image_url: artist.image_url }))}
                 />
               ))}
             </Stack>
@@ -177,7 +177,7 @@ export default function ArtistDetailPage() {
             <Grid container spacing={2.5}>
               {artist.albums.map((album) => (
                 <Grid key={album.album_id} size={{ xs: 6, sm: 4, md: 3 }}>
-                  <AlbumCard album={{ ...album, artist_name: artist.name }} />
+                  <AlbumCard album={{ ...album, artist_name: artist.name, artist_image_url: artist.image_url }} />
                 </Grid>
               ))}
             </Grid>
