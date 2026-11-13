@@ -124,7 +124,7 @@ export default function MusicPlayer() {
           if (lastVideoTime !== null) {
             const delta = currentVideoTime - lastVideoTime
             // Count real playback progress, not buffering time or manual seek jumps.
-            if (delta > 0 && delta <= 3) listenedSeconds += delta
+            if (isAuthenticatedRef.current && delta > 0 && delta <= 3) listenedSeconds += delta
           }
           lastVideoTime = currentVideoTime
 
@@ -175,6 +175,8 @@ export default function MusicPlayer() {
               }
             },
             onError: () => {
+              stopProgressTimer()
+              persistListeningEvent(true)
               setPlaybackState(false)
               setPlaybackErrorMessage('YouTube could not play this video. Try another upload.')
             },
