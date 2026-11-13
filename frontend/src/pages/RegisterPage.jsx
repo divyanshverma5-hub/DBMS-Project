@@ -54,8 +54,9 @@ export default function RegisterPage() {
         birth_date: birthDate || null,
         account_type: accountType,
         daily_skip_limit: accountType === 'free' ? 6 : null,
-        plan_type: accountType === 'premium' ? planType : null,
-        valid_months: accountType === 'premium' ? 12 : null,
+        ...(accountType === 'premium'
+          ? { plan_type: planType, valid_months: 12 }
+          : {}),
       }
 
       await register(payload)
