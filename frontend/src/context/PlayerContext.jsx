@@ -8,6 +8,7 @@ export function PlayerProvider({ children }) {
   const [queue, setQueue] = useState([])
   const [queueIndex, setQueueIndex] = useState(-1)
   const [playbackError, setPlaybackError] = useState(null)
+  const [playerCollapsed, setPlayerCollapsed] = useState(false)
 
   const queueRef = useRef([])
   const queueIndexRef = useRef(-1)
@@ -72,6 +73,8 @@ export function PlayerProvider({ children }) {
     queue,
     queueIndex,
     playbackError,
+    playerCollapsed,
+    setPlayerCollapsed,
     playTrack,
     togglePlay,
     seek,
