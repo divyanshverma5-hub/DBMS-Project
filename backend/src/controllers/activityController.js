@@ -46,6 +46,42 @@ async function recordListeningEvent(req, res, next) {
 }
 
 /**
+ * Update the accumulated duration for an existing listening session.
+ * A session can only be updated by its owner.
+ */
+async function updateListeningEvent(req, res, next) {
+  try {
+    const userId = req.user.user_id;
+    const listenId = parseInt(req.params.listenId, 10);
+    const { duration_listened_sec } = req.body;
+
+    const [sessions] = await pool.query(
+      'SELECT listen_id FROM listening_history WHERE listen_id = ? AND user_id = ?',
+      [listenId, userId]
+    );
+
+    if (sessions.length === 0) {
+      return sendError(res, 'Listening session not found.', 404);
+    }
+
+    await pool.query(
+      `UPDATE listening_history
+       SET duration_listened_sec = GREATEST(duration_listened_sec, ?)
+       WHERE listen_id = ? AND user_id = ?`,
+      [duration_listened_sec, listenId, userId]
+    );
+
+    return sendSuccess(
+      res,
+      { listen_id: listenId, duration_listened_sec },
+      'Listening session updated successfully'
+    );
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
  * Get authenticated user's listening history
  */
 async function getUserListeningHistory(req, res, next) {
@@ -172,6 +208,7 @@ async function getUserMoodHistory(req, res, next) {
 
 module.exports = {
   recordListeningEvent,
+  updateListeningEvent,
   getUserListeningHistory,
   getTrackHistorySummary,
   logUserMood,
