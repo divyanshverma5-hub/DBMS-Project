@@ -12,7 +12,6 @@ import {
   TableHead,
   TableRow,
   Chip,
-  Rating,
 } from '@mui/material'
 import HeadsetIcon from '@mui/icons-material/Headset'
 import MoodIcon from '@mui/icons-material/Mood'
@@ -35,10 +34,10 @@ export default function HistoryPage() {
     try {
       const [lhRes, mlRes] = await Promise.all([
         trackService.getListeningHistory({ limit: 50 }),
-        trackService.getMoodLogHistory().catch(() => ({ history: [] })),
+        trackService.getMoodLogHistory().catch(() => ({ mood_logs: [] })),
       ])
       setListeningHistory(lhRes?.history || [])
-      setMoodLogs(mlRes?.history || [])
+      setMoodLogs(mlRes?.mood_logs || [])
     } catch (err) {
       setError(err.message || 'Error loading listening history.')
     } finally {
@@ -169,7 +168,7 @@ export default function HistoryPage() {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Rating value={log.intensity} readOnly size="small" max={5} sx={{ color: '#6366f1' }} />
+                      <Chip size="small" label={`${log.intensity} / 5`} color="primary" variant="outlined" />
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" color="text.secondary">
