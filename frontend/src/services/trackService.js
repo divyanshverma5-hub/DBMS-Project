@@ -9,6 +9,14 @@ export const trackService = {
     return api.get(`/tracks/${id}`)
   },
 
+  async getSkipStatus() {
+    return api.get('/listening-history/skips/today')
+  },
+
+  async recordSkip(trackId) {
+    return api.post('/listening-history/skip', { track_id: trackId })
+  },
+
   async recordListen(trackId, durationListenedSec) {
     return api.post('/listening-history/listen', {
       track_id: trackId,
