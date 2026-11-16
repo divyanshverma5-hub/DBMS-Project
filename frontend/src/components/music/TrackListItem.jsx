@@ -15,6 +15,7 @@ import MusicNoteIcon from '@mui/icons-material/MusicNote'
 import { usePlayer } from '../../context/PlayerContext'
 import { formatDuration } from '../../utils/formatters'
 import AddToPlaylistDialog from './AddToPlaylistDialog'
+import LikeButton from './LikeButton'
 
 export default function TrackListItem({
   track,
@@ -164,6 +165,7 @@ export default function TrackListItem({
             {formatDuration(track.duration_sec)}
           </Typography>
 
+          <LikeButton track={track} />
           <Tooltip title="Add to Playlist">
             <IconButton size="small" onClick={() => setPlaylistDialogOpen(true)} sx={{ color: '#64748b' }}>
               <PlaylistAddRoundedIcon fontSize="small" />
