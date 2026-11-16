@@ -21,6 +21,7 @@ import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded'
 import AlbumRoundedIcon from '@mui/icons-material/AlbumRounded'
 import QueueMusicRoundedIcon from '@mui/icons-material/QueueMusicRounded'
 import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded'
+import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded'
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded'
 import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded'
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded'
@@ -36,6 +37,7 @@ const navItems = [
   { label: 'Albums', path: '/albums', icon: AlbumRoundedIcon },
   { divider: true },
   { label: 'Playlists', path: '/playlists', icon: QueueMusicRoundedIcon, authRequired: true },
+  { label: 'Liked Songs', path: '/liked-songs', icon: FavoriteRoundedIcon, authRequired: true },
   { label: 'Listening History', path: '/history', icon: HistoryRoundedIcon, authRequired: true },
   { label: 'Profile', path: '/profile', icon: PersonRoundedIcon, authRequired: true },
 ]
