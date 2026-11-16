@@ -18,6 +18,7 @@
 SOURCE 01_create_database.sql;
 SOURCE 02_schema.sql;
 SOURCE 17_remove_retired_features.sql;
+SOURCE 18_daily_skip_tracking.sql;
 SOURCE 03_indexes.sql;
 SOURCE 04_sample_data.sql;
 SOURCE 05_functions.sql;
