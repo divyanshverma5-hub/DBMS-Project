@@ -206,6 +206,151 @@ async function getUserMoodHistory(req, res, next) {
   }
 }
 
+/**
+ * Return today's skip allowance for the authenticated account.
+ * The daily window is UTC and resets at 00:00 UTC.
+ */
+async function getDailySkipStatus(req, res, next) {
+  try {
+    const userId = req.user.user_id;
+    const [[account]] = await pool.query(
+      `SELECT CASE
+                WHEN pu.user_id IS NOT NULL THEN 'premium'
+                WHEN fu.user_id IS NOT NULL THEN 'free'
+                ELSE 'unassigned'
+              END AS account_type,
+              fu.daily_skip_limit
+       FROM app_user u
+       LEFT JOIN free_user fu ON fu.user_id = u.user_id
+       LEFT JOIN premium_user pu ON pu.user_id = u.user_id
+       WHERE u.user_id = ?`,
+      [userId]
+    );
+
+    if (!account || account.account_type === 'unassigned') {
+      return sendError(res, 'An active Free or Premium account is required.', 403);
+    }
+
+    const [[usage]] = await pool.query(
+      `SELECT COUNT(*) AS skips_used
+       FROM user_skip_history
+       WHERE user_id = ?
+         AND skipped_at >= UTC_DATE()
+         AND skipped_at < UTC_DATE() + INTERVAL 1 DAY`,
+      [userId]
+    );
+    const limit = account.account_type === 'free' ? Number(account.daily_skip_limit) : null;
+    const used = Number(usage.skips_used) || 0;
+
+    return sendSuccess(res, {
+      skip_status: {
+        account_type: account.account_type,
+        daily_skip_limit: limit,
+        skips_used: used,
+        skips_remaining: limit === null ? null : Math.max(0, limit - used),
+      },
+    }, 'Daily skip allowance retrieved successfully');
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * Record one Next-track action. Locking the user's row serializes concurrent
+ * requests so simultaneous clicks cannot exceed the Free allowance.
+ */
+async function recordTrackSkip(req, res, next) {
+  const userId = req.user.user_id;
+  const trackId = Number(req.body.track_id);
+  if (!Number.isSafeInteger(trackId) || trackId < 1) {
+    return sendError(res, 'A valid track_id is required.', 400);
+  }
+
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    const [users] = await connection.query(
+      'SELECT user_id FROM app_user WHERE user_id = ? FOR UPDATE',
+      [userId]
+    );
+    if (users.length === 0) {
+      await connection.rollback();
+      return sendError(res, 'User account not found.', 404);
+    }
+
+    const [[account]] = await connection.query(
+      `SELECT CASE
+                WHEN pu.user_id IS NOT NULL THEN 'premium'
+                WHEN fu.user_id IS NOT NULL THEN 'free'
+                ELSE 'unassigned'
+              END AS account_type,
+              fu.daily_skip_limit
+       FROM app_user u
+       LEFT JOIN free_user fu ON fu.user_id = u.user_id
+       LEFT JOIN premium_user pu ON pu.user_id = u.user_id
+       WHERE u.user_id = ?`,
+      [userId]
+    );
+
+    if (account.account_type === 'premium') {
+      await connection.commit();
+      return sendSuccess(res, {
+        skip_status: { account_type: 'premium', daily_skip_limit: null, skips_used: 0, skips_remaining: null },
+      }, 'Premium skips are unlimited');
+    }
+    if (account.account_type !== 'free') {
+      await connection.rollback();
+      return sendError(res, 'An active Free or Premium account is required.', 403);
+    }
+
+    const limit = Number(account.daily_skip_limit);
+    const [[usage]] = await connection.query(
+      `SELECT COUNT(*) AS skips_used
+       FROM user_skip_history
+       WHERE user_id = ?
+         AND skipped_at >= UTC_DATE()
+         AND skipped_at < UTC_DATE() + INTERVAL 1 DAY`,
+      [userId]
+    );
+    const used = Number(usage.skips_used) || 0;
+    if (used >= limit) {
+      await connection.rollback();
+      return sendError(res, `Daily skip limit reached. You have used all ${limit} free skips; the allowance resets at 00:00 UTC.`, 429);
+    }
+
+    const [tracks] = await connection.query('SELECT track_id FROM track WHERE track_id = ?', [trackId]);
+    if (tracks.length === 0) {
+      await connection.rollback();
+      return sendError(res, 'Track not found.', 404);
+    }
+
+    await connection.query(
+      'INSERT INTO user_skip_history (user_id, track_id, skipped_at) VALUES (?, ?, UTC_TIMESTAMP())',
+      [userId, trackId]
+    );
+    await connection.commit();
+
+    const skipsUsed = used + 1;
+    return sendSuccess(res, {
+      skip_status: {
+        account_type: 'free',
+        daily_skip_limit: limit,
+        skips_used: skipsUsed,
+        skips_remaining: Math.max(0, limit - skipsUsed),
+      },
+    }, 'Track skip recorded successfully');
+  } catch (err) {
+    if (connection) {
+      try { await connection.rollback(); } catch { /* Keep the original error. */ }
+    }
+    next(err);
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
 module.exports = {
   recordListeningEvent,
   updateListeningEvent,
@@ -213,4 +358,6 @@ module.exports = {
   getTrackHistorySummary,
   logUserMood,
   getUserMoodHistory,
+  getDailySkipStatus,
+  recordTrackSkip,
 };
