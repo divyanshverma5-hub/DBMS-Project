@@ -20,4 +20,7 @@ CREATE TABLE IF NOT EXISTS user_skip_history (
     INDEX idx_user_skip_history_user_date (user_id, skipped_at)
 ) ENGINE=InnoDB;
 
+-- Apply the fixed six-skip allowance to existing Free accounts as well.
+UPDATE free_user SET daily_skip_limit = 6;
+
 SELECT 'Daily skip tracking is ready.' AS migration_status;
