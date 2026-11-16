@@ -16,6 +16,7 @@ export function PlayerProvider({ children }) {
 
   const queueRef = useRef([])
   const queueIndexRef = useRef(-1)
+  const skipInProgressRef = useRef(false)
 
   useEffect(() => {
     let active = true
@@ -78,17 +79,20 @@ export function PlayerProvider({ children }) {
   const nextTrack = useCallback(async () => {
     const q = queueRef.current
     const idx = queueIndexRef.current
-    if (q.length === 0 || !currentTrack) return
+    if (q.length === 0 || !currentTrack || skipInProgressRef.current) return
     if (!isAuthenticated) {
       setPlaybackError('Please log in before playing music.')
       return
     }
+    skipInProgressRef.current = true
     try {
       const response = await trackService.recordSkip(currentTrack.track_id)
       if (response?.skip_status) setSkipStatus(response.skip_status)
     } catch (error) {
       setPlaybackError(error.message || 'Could not skip this track.')
       return
+    } finally {
+      skipInProgressRef.current = false
     }
     const nextIdx = (idx + 1) % q.length
     setQueueIndex(nextIdx)
