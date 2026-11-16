@@ -18,6 +18,7 @@ import AlbumDetailPage from './pages/AlbumDetailPage'
 import PlaylistsPage from './pages/PlaylistsPage'
 import PlaylistDetailPage from './pages/PlaylistDetailPage'
 import HistoryPage from './pages/HistoryPage'
+import LikedSongsPage from './pages/LikedSongsPage'
 import ProfilePage from './pages/ProfilePage'
 import UserProfilePage from './pages/UserProfilePage'
 import LoginPage from './pages/LoginPage'
@@ -49,6 +50,10 @@ export default function App() {
                 <Route
                   path="playlists/:playlistNo"
                   element={<ProtectedRoute><PlaylistDetailPage /></ProtectedRoute>}
+                />
+                <Route
+                  path="liked-songs"
+                  element={<ProtectedRoute><LikedSongsPage /></ProtectedRoute>}
                 />
                 <Route
                   path="history"
