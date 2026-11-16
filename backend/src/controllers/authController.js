@@ -17,7 +17,6 @@ async function register(req, res, next) {
       birth_date = null,
       country = null,
       account_type = 'free',
-      daily_skip_limit = 6,
       plan_type = null,
       valid_months = 12,
     } = req.body;
@@ -53,7 +52,7 @@ async function register(req, res, next) {
       birth_date || null,
       country || null,
       account_type,
-      account_type === 'free' ? daily_skip_limit : null,
+      account_type === 'free' ? 6 : null,
       account_type === 'premium' ? (plan_type || 'basic') : null,
       account_type === 'premium' ? valid_months : null,
     ];
