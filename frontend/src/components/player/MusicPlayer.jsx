@@ -10,6 +10,7 @@ import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded'
 import { usePlayer } from '../../context/PlayerContext'
 import { useAuth } from '../../context/AuthContext'
 import trackService from '../../services/trackService'
+import LikeButton from '../music/LikeButton'
 
 let youtubeApiPromise = null
 
@@ -254,6 +255,7 @@ export default function MusicPlayer() {
               {skipStatus?.account_type === 'free' && <Chip size="small" label={`${skipStatus.skips_remaining} / ${skipStatus.daily_skip_limit} skips left today`} sx={{ mt: 0.5, height: 20, fontSize: '0.65rem' }} />}
             </Box>
             <Stack direction="row" spacing={0.5}>
+              <LikeButton track={currentTrack} />
               <Tooltip title={isPlaying ? 'Pause' : 'Resume'}><IconButton size="small" onClick={togglePlay} aria-label={isPlaying ? 'Pause playback' : 'Resume playback'}>{isPlaying ? <PauseRoundedIcon /> : <PlayArrowRoundedIcon />}</IconButton></Tooltip>
               <Tooltip title="Previous track"><IconButton size="small" onClick={prevTrack}><SkipPreviousRoundedIcon /></IconButton></Tooltip>
               <Tooltip title="Next track"><IconButton size="small" onClick={nextTrack} disabled={skipDisabled}><SkipNextRoundedIcon /></IconButton></Tooltip>
@@ -273,6 +275,7 @@ export default function MusicPlayer() {
               </Box>
             </Box>
             <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
+              <LikeButton track={currentTrack} />
               <Tooltip title={isPlaying ? 'Pause' : 'Resume'}><IconButton size="small" onClick={togglePlay} aria-label={isPlaying ? 'Pause playback' : 'Resume playback'}>{isPlaying ? <PauseRoundedIcon /> : <PlayArrowRoundedIcon />}</IconButton></Tooltip>
               <Tooltip title="Previous track"><IconButton size="small" onClick={prevTrack}><SkipPreviousRoundedIcon /></IconButton></Tooltip>
               <Tooltip title="Next track"><IconButton size="small" onClick={nextTrack}><SkipNextRoundedIcon /></IconButton></Tooltip>
