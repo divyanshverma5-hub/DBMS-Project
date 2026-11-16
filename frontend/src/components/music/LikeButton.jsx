@@ -33,9 +33,11 @@ export default function LikeButton({ track, size = 'small' }) {
       if (liked) {
         await likedSongsService.unlikeSong(track.track_id)
         setLiked(false)
+        window.dispatchEvent(new CustomEvent('liked-songs:updated'))
       } else {
         await likedSongsService.likeSong(track.track_id)
         setLiked(true)
+        window.dispatchEvent(new CustomEvent('liked-songs:updated'))
       }
     } catch (error) {
       console.error('Could not update liked songs:', error)
