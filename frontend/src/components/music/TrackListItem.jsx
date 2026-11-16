@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import {
   Box,
   Typography,
@@ -21,6 +23,9 @@ export default function TrackListItem({
   showAlbum = true,
 }) {
   const { currentTrack, isPlaying, playTrack } = usePlayer()
+  const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
   const [playlistDialogOpen, setPlaylistDialogOpen] = useState(false)
 
   const isCurrentTrack = currentTrack?.track_id === track.track_id
@@ -28,6 +33,10 @@ export default function TrackListItem({
   const hasYouTubeVideo = Boolean(track.youtube_video_id)
 
   const handlePlayClick = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: location } })
+      return
+    }
     if (!isCurrentTrack) playTrack(track, playlistContext)
   }
 
