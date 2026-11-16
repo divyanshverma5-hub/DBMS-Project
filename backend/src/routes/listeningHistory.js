@@ -5,6 +5,10 @@ const { authenticateToken } = require('../middleware/auth');
 const { validateRequest } = require('../middleware/validate');
 const { recordListenRules, updateListenRules, logMoodRules } = require('../validators');
 
+// Daily skip allowance (server-enforced)
+router.get('/skips/today', authenticateToken, activityController.getDailySkipStatus);
+router.post('/skip', authenticateToken, activityController.recordTrackSkip);
+
 // Listening history
 router.post('/listen', authenticateToken, recordListenRules, validateRequest, activityController.recordListeningEvent);
 router.put('/listen/:listenId', authenticateToken, updateListenRules, validateRequest, activityController.updateListeningEvent);
