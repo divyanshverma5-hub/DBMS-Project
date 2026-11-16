@@ -178,10 +178,15 @@ export default function MusicPlayer() {
               if (event.data === YT.PlayerState.PLAYING) {
                 setPlaybackState(true)
                 startProgressTimer()
-              } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+              } else if (event.data === YT.PlayerState.PAUSED) {
                 stopProgressTimer()
                 setPlaybackState(false)
                 persistListeningEvent(true)
+              } else if (event.data === YT.PlayerState.ENDED) {
+                stopProgressTimer()
+                setPlaybackState(false)
+                persistListeningEvent(true)
+                nextTrack({ automatic: true })
               } else if (event.data === YT.PlayerState.BUFFERING || event.data === YT.PlayerState.CUED) {
                 stopProgressTimer()
               }
@@ -257,7 +262,7 @@ export default function MusicPlayer() {
             <Stack direction="row" spacing={0.5}>
               <LikeButton track={currentTrack} />
               <Tooltip title={isPlaying ? 'Pause' : 'Resume'}><IconButton size="small" onClick={togglePlay} aria-label={isPlaying ? 'Pause playback' : 'Resume playback'}>{isPlaying ? <PauseRoundedIcon /> : <PlayArrowRoundedIcon />}</IconButton></Tooltip>
-              <Tooltip title="Previous track"><IconButton size="small" onClick={prevTrack}><SkipPreviousRoundedIcon /></IconButton></Tooltip>
+              <Tooltip title="Previous track"><IconButton size="small" onClick={prevTrack} disabled={skipDisabled}><SkipPreviousRoundedIcon /></IconButton></Tooltip>
               <Tooltip title="Next track"><IconButton size="small" onClick={nextTrack} disabled={skipDisabled}><SkipNextRoundedIcon /></IconButton></Tooltip>
             </Stack>
           </Box>
@@ -277,7 +282,7 @@ export default function MusicPlayer() {
             <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
               <LikeButton track={currentTrack} />
               <Tooltip title={isPlaying ? 'Pause' : 'Resume'}><IconButton size="small" onClick={togglePlay} aria-label={isPlaying ? 'Pause playback' : 'Resume playback'}>{isPlaying ? <PauseRoundedIcon /> : <PlayArrowRoundedIcon />}</IconButton></Tooltip>
-              <Tooltip title="Previous track"><IconButton size="small" onClick={prevTrack}><SkipPreviousRoundedIcon /></IconButton></Tooltip>
+              <Tooltip title="Previous track"><IconButton size="small" onClick={prevTrack} disabled={skipDisabled}><SkipPreviousRoundedIcon /></IconButton></Tooltip>
               <Tooltip title="Next track"><IconButton size="small" onClick={nextTrack}><SkipNextRoundedIcon /></IconButton></Tooltip>
             </Stack>
           </Box>
