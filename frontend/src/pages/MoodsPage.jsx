@@ -4,25 +4,16 @@ import {
   Typography,
   Grid,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Slider,
-  Alert,
   Paper,
   Tabs,
   Tab,
   Stack,
   Chip,
 } from '@mui/material'
-import AddReactionIcon from '@mui/icons-material/AddReaction'
 import AccountTreeIcon from '@mui/icons-material/AccountTree'
 import AppsIcon from '@mui/icons-material/Apps'
 import { useSearchParams } from 'react-router-dom'
 import genreMoodService from '../services/genreMoodService'
-import trackService from '../services/trackService'
-import { useAuth } from '../context/AuthContext'
 import MoodCard from '../components/music/MoodCard'
 import TrackListItem from '../components/music/TrackListItem'
 import LoadingState from '../components/common/LoadingState'
@@ -33,7 +24,6 @@ export default function MoodsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const initialSelected = searchParams.get('selected')
 
-  const { isAuthenticated } = useAuth()
   const [tab, setTab] = useState(0) // 0 = Mood Grid, 1 = Recursive Hierarchy Tree
   const [moods, setMoods] = useState([])
   const [hierarchy, setHierarchy] = useState([])
@@ -43,13 +33,6 @@ export default function MoodsPage() {
   const [tracksLoading, setTracksLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  // Log Mood Dialog State
-  const [logDialogOpen, setLogDialogOpen] = useState(false)
-  const [logMoodId, setLogMoodId] = useState(1)
-  const [logIntensity, setLogIntensity] = useState(3)
-  const [logSubmitting, setLogSubmitting] = useState(false)
-  const [logSuccessMsg, setLogSuccessMsg] = useState(null)
-  const [logErrorMsg, setLogErrorMsg] = useState(null)
 
   const handleSelectMood = useCallback(async (mood) => {
     setSelectedMood(mood)
@@ -103,32 +86,6 @@ export default function MoodsPage() {
     loadMoodsData()
   }, [loadMoodsData])
 
-  const handleOpenLogDialog = () => {
-    setLogMoodId(selectedMood?.mood_id || (moods[0]?.mood_id || 1))
-    setLogIntensity(3)
-    setLogSuccessMsg(null)
-    setLogErrorMsg(null)
-    setLogDialogOpen(true)
-  }
-
-  const handleLogMoodSubmit = async () => {
-    if (!isAuthenticated) return
-    setLogSubmitting(true)
-    setLogSuccessMsg(null)
-    setLogErrorMsg(null)
-    try {
-      await trackService.logMood(logMoodId, logIntensity)
-      setLogSuccessMsg('Emotional mood session recorded successfully!')
-      setTimeout(() => {
-        setLogDialogOpen(false)
-      }, 1500)
-    } catch (err) {
-      setLogErrorMsg(err.message || 'Could not log mood.')
-    } finally {
-      setLogSubmitting(false)
-    }
-  }
-
   if (loading) {
     return <LoadingState message="Mapping emotional mood hierarchy…" />
   }
@@ -156,17 +113,6 @@ export default function MoodsPage() {
           </Typography>
         </Box>
 
-        {isAuthenticated && (
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddReactionIcon />}
-            onClick={handleOpenLogDialog}
-            sx={{ flexShrink: 0 }}
-          >
-            Log Current Mood
-          </Button>
-        )}
       </Box>
 
       {/* Tabs: Grid vs Recursive Hierarchy Tree */}
@@ -288,79 +234,6 @@ export default function MoodsPage() {
         </Box>
       )}
 
-      {/* Log Mood Emotional Session Dialog */}
-      <Dialog
-        open={logDialogOpen}
-        onClose={() => setLogDialogOpen(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle sx={{ fontWeight: 600 }}>Log Mood Session</DialogTitle>
-        <DialogContent dividers>
-          {logErrorMsg && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {logErrorMsg}
-            </Alert>
-          )}
-          {logSuccessMsg && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              {logSuccessMsg}
-            </Alert>
-          )}
-
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Record your current mood to build your emotional listening history.
-          </Typography>
-
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="caption" fontWeight={600} color="text.secondary" display="block" gutterBottom>
-              SELECT CURRENT MOOD
-            </Typography>
-            <Grid container spacing={1}>
-              {moods.map((m) => (
-                <Grid key={m.mood_id} size={{ xs: 6 }}>
-                  <Button
-                    fullWidth
-                    size="small"
-                    variant={logMoodId === m.mood_id ? 'contained' : 'outlined'}
-                    onClick={() => setLogMoodId(m.mood_id)}
-                    sx={{ fontSize: '0.8rem', py: 1 }}
-                  >
-                    {m.name}
-                  </Button>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-
-          <Box sx={{ mb: 1 }}>
-            <Typography variant="caption" fontWeight={600} color="text.secondary" display="block" gutterBottom>
-              INTENSITY (1 = MILD, 5 = OVERWHELMING): {logIntensity}
-            </Typography>
-            <Slider
-              value={logIntensity}
-              min={1}
-              max={5}
-              step={1}
-              marks
-              onChange={(_, v) => setLogIntensity(v)}
-              sx={{ color: '#6366f1' }}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setLogDialogOpen(false)} disabled={logSubmitting}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleLogMoodSubmit}
-            disabled={logSubmitting}
-          >
-            {logSubmitting ? 'Recording…' : 'Record Session'}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   )
 }
