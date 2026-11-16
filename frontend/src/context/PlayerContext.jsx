@@ -79,25 +79,55 @@ export function PlayerProvider({ children }) {
   const nextTrack = useCallback(async () => {
     const q = queueRef.current
     const idx = queueIndexRef.current
-    if (q.length === 0 || !currentTrack || skipInProgressRef.current) return
+    if (!currentTrack || skipInProgressRef.current) return
     if (!isAuthenticated) {
       setPlaybackError('Please log in before playing music.')
       return
     }
+
     skipInProgressRef.current = true
     try {
+      let activeQueue = q
+      let nextIdx
+
+      // Tracks started from a single card may not have a playlist queue.
+      // In that case, fetch the catalogue and build a queue so Next still works.
+      if (activeQueue.length === 0) {
+        const response = await trackService.getTracks({
+          limit: 100,
+          sort_by: 'popularity',
+          sort_dir: 'DESC',
+        })
+        const candidates = (response?.tracks || []).filter((track) =>
+          track.youtube_video_id &&
+          Number(track.track_id) !== Number(currentTrack.track_id)
+        )
+
+        if (candidates.length === 0) {
+          throw new Error('No other playable tracks are available right now.')
+        }
+
+        const randomIndex = Math.floor(Math.random() * candidates.length)
+        activeQueue = [currentTrack, ...candidates]
+        nextIdx = randomIndex + 1
+      } else {
+        nextIdx = (idx + 1) % activeQueue.length
+      }
+
+      // Only consume a skip after a next track has been found.
       const response = await trackService.recordSkip(currentTrack.track_id)
       if (response?.skip_status) setSkipStatus(response.skip_status)
+
+      setQueue(activeQueue)
+      queueRef.current = activeQueue
+      setQueueIndex(nextIdx)
+      queueIndexRef.current = nextIdx
+      playTrack(activeQueue[nextIdx], activeQueue)
     } catch (error) {
       setPlaybackError(error.message || 'Could not skip this track.')
-      return
     } finally {
       skipInProgressRef.current = false
     }
-    const nextIdx = (idx + 1) % q.length
-    setQueueIndex(nextIdx)
-    queueIndexRef.current = nextIdx
-    playTrack(q[nextIdx])
   }, [currentTrack, isAuthenticated, playTrack])
 
   const prevTrack = useCallback(() => {
