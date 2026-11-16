@@ -138,19 +138,30 @@ export function PlayerProvider({ children }) {
     }
   }, [currentTrack, isAuthenticated, playTrack, skipStatus])
 
-  const prevTrack = useCallback(() => {
+  const prevTrack = useCallback(async () => {
     const q = queueRef.current
     const idx = queueIndexRef.current
-    if (q.length === 0 || !isAuthenticated) return
+    if (q.length === 0 || !currentTrack || !isAuthenticated || skipInProgressRef.current) return
     if (skipStatus?.account_type === 'free' && Number(skipStatus.skips_remaining) <= 0) {
       setPlaybackError('You have used all 6 free skips for today.')
       return
     }
-    const prevIdx = (idx - 1 + q.length) % q.length
-    setQueueIndex(prevIdx)
-    queueIndexRef.current = prevIdx
-    playTrack(q[prevIdx])
-  }, [isAuthenticated, playTrack, skipStatus])
+
+    skipInProgressRef.current = true
+    try {
+      const prevIdx = (idx - 1 + q.length) % q.length
+      // Previous and Next are both manual track changes for Free accounts.
+      const response = await trackService.recordSkip(currentTrack.track_id)
+      if (response?.skip_status) setSkipStatus(response.skip_status)
+      setQueueIndex(prevIdx)
+      queueIndexRef.current = prevIdx
+      playTrack(q[prevIdx])
+    } catch (error) {
+      setPlaybackError(error.message || 'Could not play the previous track.')
+    } finally {
+      skipInProgressRef.current = false
+    }
+  }, [currentTrack, isAuthenticated, playTrack, skipStatus])
 
   const value = {
     currentTrack, isPlaying, currentTime: 0,
