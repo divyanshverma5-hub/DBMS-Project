@@ -76,12 +76,19 @@ export function PlayerProvider({ children }) {
   const setVolume = useCallback(() => {}, [])
   const toggleMute = useCallback(() => {}, [])
 
-  const nextTrack = useCallback(async () => {
+  const nextTrack = useCallback(async ({ automatic = false } = {}) => {
     const q = queueRef.current
     const idx = queueIndexRef.current
     if (!currentTrack || skipInProgressRef.current) return
     if (!isAuthenticated) {
       setPlaybackError('Please log in before playing music.')
+      return
+    }
+
+    // Manual track changes use the daily allowance. Natural track completion
+    // advances automatically and never consumes one of the user's skips.
+    if (!automatic && skipStatus?.account_type === 'free' && Number(skipStatus.skips_remaining) <= 0) {
+      setPlaybackError('You have used all 6 free skips for today.')
       return
     }
 
@@ -114,9 +121,10 @@ export function PlayerProvider({ children }) {
         nextIdx = (idx + 1) % activeQueue.length
       }
 
-      // Only consume a skip after a next track has been found.
-      const response = await trackService.recordSkip(currentTrack.track_id)
-      if (response?.skip_status) setSkipStatus(response.skip_status)
+      if (!automatic) {
+        const response = await trackService.recordSkip(currentTrack.track_id)
+        if (response?.skip_status) setSkipStatus(response.skip_status)
+      }
 
       setQueue(activeQueue)
       queueRef.current = activeQueue
@@ -124,21 +132,25 @@ export function PlayerProvider({ children }) {
       queueIndexRef.current = nextIdx
       playTrack(activeQueue[nextIdx], activeQueue)
     } catch (error) {
-      setPlaybackError(error.message || 'Could not skip this track.')
+      setPlaybackError(error.message || (automatic ? 'Could not play the next track.' : 'Could not skip this track.'))
     } finally {
       skipInProgressRef.current = false
     }
-  }, [currentTrack, isAuthenticated, playTrack])
+  }, [currentTrack, isAuthenticated, playTrack, skipStatus])
 
   const prevTrack = useCallback(() => {
     const q = queueRef.current
     const idx = queueIndexRef.current
     if (q.length === 0 || !isAuthenticated) return
+    if (skipStatus?.account_type === 'free' && Number(skipStatus.skips_remaining) <= 0) {
+      setPlaybackError('You have used all 6 free skips for today.')
+      return
+    }
     const prevIdx = (idx - 1 + q.length) % q.length
     setQueueIndex(prevIdx)
     queueIndexRef.current = prevIdx
     playTrack(q[prevIdx])
-  }, [isAuthenticated, playTrack])
+  }, [isAuthenticated, playTrack, skipStatus])
 
   const value = {
     currentTrack, isPlaying, currentTime: 0,
