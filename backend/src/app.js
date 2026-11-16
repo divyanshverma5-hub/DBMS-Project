@@ -11,6 +11,7 @@ const genresRouter = require('./routes/genres');
 const moodsRouter = require('./routes/moods');
 const listeningHistoryRouter = require('./routes/listeningHistory');
 const playlistsRouter = require('./routes/playlists');
+const likedSongsRouter = require('./routes/likedSongs');
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use('/api/genres', genresRouter);
 app.use('/api/moods', moodsRouter);
 app.use('/api/listening-history', listeningHistoryRouter);
 app.use('/api/playlists', playlistsRouter);
+app.use('/api/liked-songs', likedSongsRouter);
 
 app.use((req, res) => {
   res.status(404).json({
