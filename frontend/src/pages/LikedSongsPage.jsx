@@ -33,6 +33,11 @@ export default function LikedSongsPage() {
 
   useEffect(() => { load() }, [load])
 
+  useEffect(() => {
+    window.addEventListener('liked-songs:updated', load)
+    return () => window.removeEventListener('liked-songs:updated', load)
+  }, [load])
+
   if (loading) return <LoadingState message="Loading your Liked Songs…" />
   if (error) return <ErrorState title="Liked Songs Unavailable" message={error} onRetry={load} />
 
